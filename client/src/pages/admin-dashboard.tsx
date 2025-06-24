@@ -212,18 +212,18 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
           <Card className="shadow-lg">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Users className="text-green-600 h-6 w-6" />
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Users className="text-green-600 h-4 w-4 sm:h-6 sm:w-6" />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Funcionários Ativos</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                <div className="ml-2 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Funcionários Ativos</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     {statsLoading ? <LoadingSpinner size="sm" /> : stats?.activeEmployees || 0}
                   </p>
                 </div>
@@ -290,22 +290,24 @@ export default function AdminDashboard() {
         <Card className="shadow-lg">
           <Tabs defaultValue="realtime" className="w-full">
             <CardHeader className="pb-0">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="realtime" className="flex items-center">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Tempo Real
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+                <TabsTrigger value="realtime" className="flex items-center justify-center text-xs sm:text-sm px-2 sm:px-3">
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Tempo Real</span>
+                  <span className="sm:hidden">Tempo</span>
                 </TabsTrigger>
-                <TabsTrigger value="users" className="flex items-center">
-                  <UserCog className="h-4 w-4 mr-2" />
-                  Usuários
+                <TabsTrigger value="users" className="flex items-center justify-center text-xs sm:text-sm px-2 sm:px-3">
+                  <UserCog className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span>Usuários</span>
                 </TabsTrigger>
-                <TabsTrigger value="reports" className="flex items-center">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Relatórios
+                <TabsTrigger value="reports" className="flex items-center justify-center text-xs sm:text-sm px-2 sm:px-3">
+                  <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span>Relatórios</span>
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Configurações
+                <TabsTrigger value="settings" className="flex items-center justify-center text-xs sm:text-sm px-2 sm:px-3">
+                  <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Configurações</span>
+                  <span className="sm:hidden">Config</span>
                 </TabsTrigger>
               </TabsList>
             </CardHeader>
@@ -355,6 +357,7 @@ export default function AdminDashboard() {
                         disabled={!selectedReportMonth}
                         variant="outline"
                         className="flex-1"
+                        title="Certifique-se de que o email está configurado no servidor"
                       >
                         <Mail className="h-4 w-4 mr-2" />
                         Enviar Email
@@ -362,31 +365,47 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <Card className="bg-gray-50">
-                    <CardHeader>
-                      <CardTitle className="text-base">Informações do Relatório</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Formato:</span>
-                          <span className="font-medium">CSV (Excel compatível)</span>
+                  <div className="space-y-4">
+                    <Card className="bg-gray-50">
+                      <CardHeader>
+                        <CardTitle className="text-base">Informações do Relatório</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Formato:</span>
+                            <span className="font-medium">CSV (Excel compatível)</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Conteúdo:</span>
+                            <span className="font-medium">Todos os registros</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Inclui:</span>
+                            <span className="font-medium">Nome, data, horários, locais</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Ordenação:</span>
+                            <span className="font-medium">Por funcionário e data</span>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Conteúdo:</span>
-                          <span className="font-medium">Todos os registros</span>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-yellow-50 border-yellow-200">
+                      <CardContent className="pt-4">
+                        <div className="flex items-start space-x-2">
+                          <Mail className="h-4 w-4 text-yellow-600 mt-0.5" />
+                          <div className="text-sm">
+                            <p className="font-medium text-yellow-800">Configuração de Email</p>
+                            <p className="text-yellow-700 mt-1">
+                              Para enviar relatórios por email, configure EMAIL_USER e EMAIL_PASS nas variáveis de ambiente do servidor.
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Inclui:</span>
-                          <span className="font-medium">Nome, data, horários, locais</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Ordenação:</span>
-                          <span className="font-medium">Por funcionário e data</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </TabsContent>
 

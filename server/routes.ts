@@ -110,15 +110,15 @@ export function registerRoutes(app: Express): Server {
     try {
       const userId = req.user.id;
       const { month, year } = req.query;
-      
+
       let startDate: Date | undefined;
       let endDate: Date | undefined;
-      
+
       if (month && year) {
         startDate = new Date(Number(year), Number(month) - 1, 1);
         endDate = new Date(Number(year), Number(month), 0, 23, 59, 59);
       }
-      
+
       const records = await storage.getUserTimeRecords(userId, startDate, endDate);
       res.json(records);
     } catch (error) {
@@ -191,7 +191,7 @@ export function registerRoutes(app: Express): Server {
       // Hash the password before creating the user
       const { hashPassword } = await import('./auth');
       const hashedPassword = await hashPassword(userData.password);
-      
+
       const newUser = await storage.createUser({
         ...userData,
         password: hashedPassword,
@@ -213,7 +213,7 @@ export function registerRoutes(app: Express): Server {
 
       const { id } = req.params;
       const updates = req.body;
-      
+
       // Hash password if provided and not empty
       if (updates.password && updates.password.trim() !== '') {
         if (updates.password.length < 6) {
@@ -225,7 +225,7 @@ export function registerRoutes(app: Express): Server {
         // Remove password field if empty to avoid updating with empty value
         delete updates.password;
       }
-      
+
       const updatedUser = await storage.updateUser(parseInt(id), updates);
       res.json({ ...updatedUser, password: undefined });
     } catch (error) {
@@ -259,25 +259,25 @@ export function registerRoutes(app: Express): Server {
       }
 
       const { month, year, userId, sendEmail } = req.body;
-      
+
       if (!month || !year) {
         return res.status(400).json({ message: "Mês e ano são obrigatórios" });
       }
 
       const csvBuffer = await reportsService.generateMonthlyReport(Number(month), Number(year), userId);
-      
+
       if (sendEmail) {
         const reportEmailSetting = await storage.getSetting('report_email');
         const reportEmail = reportEmailSetting?.value;
-        
+
         if (reportEmail) {
           const monthName = new Date(Number(year), Number(month) - 1).toLocaleDateString('pt-BR', { 
             month: 'long', 
             year: 'numeric' 
           });
-          
+
           const emailSent = await emailService.sendReportEmail(reportEmail, csvBuffer, monthName);
-          
+
           if (emailSent) {
             res.json({ message: "Relatório enviado por email com sucesso" });
           } else {
@@ -293,8 +293,12 @@ export function registerRoutes(app: Express): Server {
         res.send(csvBuffer);
       }
     } catch (error) {
-      console.error("Error generating report:", error);
-      res.status(500).json({ message: "Erro ao gerar relatório" });
+      console.error('Erro ao gerar relatório:', error);
+      if (sendEmail) {
+        res.status(500).json({ message: 'Erro ao enviar email. Verifique as configurações de email no servidor.' });
+      } else {
+        res.status(500).json({ message: 'Erro interno do servidor ao gerar relatório' });
+      }
     }
   });
 

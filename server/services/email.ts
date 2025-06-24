@@ -72,6 +72,11 @@ class EmailService {
   }
 
   async sendReportEmail(to: string, csvBuffer: Buffer, month: string): Promise<boolean> {
+    if (!this.transporter) {
+      console.error('Serviço de email não configurado. Configure EMAIL_USER e EMAIL_PASS nas variáveis de ambiente.');
+      return false;
+    }
+    
     return this.sendEmail({
       to,
       subject: `Clean My House - Relatório Mensal de Ponto (${month})`,

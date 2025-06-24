@@ -64,11 +64,11 @@ export function RealTimeFeed() {
               return (
                 <div
                   key={record.id}
-                  className={`flex items-center justify-between p-4 rounded-lg ${
+                  className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg ${
                     isEntry ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
                   }`}
                 >
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-4 mb-2 sm:mb-0">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                       isEntry ? 'bg-green-100' : 'bg-red-100'
                     }`}>
@@ -79,25 +79,25 @@ export function RealTimeFeed() {
                       )}
                     </div>
                     
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-900">{userName}</span>
-                        <Badge variant={isEntry ? 'default' : 'destructive'}>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-gray-900 text-sm sm:text-base">{userName}</span>
+                        <Badge variant={isEntry ? 'default' : 'destructive'} className="text-xs">
                           {isEntry ? 'Entrada' : 'Saída'}
                         </Badge>
                       </div>
                       
                       {record.location && (
-                        <div className="flex items-center text-sm text-gray-600 mt-1">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span className="truncate max-w-xs">{record.location}</span>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{record.location}</span>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">
+                  <div className="flex sm:flex-col sm:text-right">
+                    <p className="text-sm font-medium text-gray-900 mr-2 sm:mr-0">
                       {new Date(record.timestamp).toLocaleTimeString('pt-BR', {
                         hour: '2-digit',
                         minute: '2-digit'

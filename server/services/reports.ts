@@ -106,30 +106,36 @@ export class ReportsService {
     const headers = [
       'Funcionário',
       'Data',
-      'Hora de Entrada',
+      'Horário de Entrada',
       'Local de Entrada',
-      'Hora de Saída',
+      'Horário de Saída',
       'Local de Saída',
-      'Horas Trabalhadas'
+      'Horas Trabalhadas',
+      'Status'
     ];
 
     const csvRows = [];
-    csvRows.push(headers.join(','));
+    // Add BOM for proper Excel encoding
+    csvRows.push('\uFEFF' + headers.join(';'));
 
     data.forEach(row => {
+      const status = row.horaEntrada && row.horaSaida ? 'Completo' : 
+                    row.horaEntrada ? 'Entrada sem saída' : 'Saída sem entrada';
+      
       const values = [
         this.escapeCSV(row.funcionario),
         this.escapeCSV(row.data),
-        this.escapeCSV(row.horaEntrada),
-        this.escapeCSV(row.localEntrada),
-        this.escapeCSV(row.horaSaida),
-        this.escapeCSV(row.localSaida),
-        this.escapeCSV(row.horasTrabalhadas),
+        this.escapeCSV(row.horaEntrada || '-'),
+        this.escapeCSV(row.localEntrada || '-'),
+        this.escapeCSV(row.horaSaida || '-'),
+        this.escapeCSV(row.localSaida || '-'),
+        this.escapeCSV(row.horasTrabalhadas || '-'),
+        this.escapeCSV(status),
       ];
-      csvRows.push(values.join(','));
+      csvRows.push(values.join(';'));
     });
 
-    return csvRows.join('\n');
+    return csvRows.join('\r\n');
   }
 
   private escapeCSV(value: string): string {
