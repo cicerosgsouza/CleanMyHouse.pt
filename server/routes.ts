@@ -299,6 +299,7 @@ export function registerRoutes(app: Express): Server {
       }
     } catch (error) {
       console.error('Erro ao gerar relatório:', error);
+      const { sendEmail } = req.body;
       if (sendEmail) {
         res.status(500).json({ message: 'Erro ao enviar email. Verifique as configurações de email no servidor.' });
       } else {
