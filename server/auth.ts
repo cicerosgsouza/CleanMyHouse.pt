@@ -24,12 +24,20 @@ async function hashPassword(password: string): Promise<string> {
 
 async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
   try {
+    console.log('Comparing passwords:');
+    console.log('- Supplied password length:', supplied?.length || 0);
+    console.log('- Stored password length:', stored?.length || 0);
+    console.log('- Stored password format:', stored?.substring(0, 20) + '...');
+    
     if (!stored || !stored.includes('.')) {
       console.log('Invalid password format in database - missing salt separator');
       return false;
     }
     
     const [hashed, salt] = stored.split(".");
+    console.log('- Hash length:', hashed?.length || 0);
+    console.log('- Salt length:', salt?.length || 0);
+    
     if (!hashed || !salt) {
       console.log('Invalid password format - missing hash or salt');
       return false;
@@ -38,12 +46,17 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
     
+    console.log('- Stored buffer length:', hashedBuf.length);
+    console.log('- Supplied buffer length:', suppliedBuf.length);
+    
     if (hashedBuf.length !== suppliedBuf.length) {
       console.log(`Buffer length mismatch: stored=${hashedBuf.length}, supplied=${suppliedBuf.length}`);
       return false;
     }
     
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    const isMatch = timingSafeEqual(hashedBuf, suppliedBuf);
+    console.log('- Password match result:', isMatch);
+    return isMatch;
   } catch (error) {
     console.error('Password comparison error:', error);
     return false;
