@@ -88,6 +88,7 @@ export function setupAuth(app: Express) {
             return done(null, false);
           }
           
+          console.log('Stored password format:', user.password ? `${user.password.length} chars, has dot: ${user.password.includes('.')}` : 'empty');
           const passwordMatch = await comparePasswords(password, user.password);
           console.log('Password match:', passwordMatch);
           
