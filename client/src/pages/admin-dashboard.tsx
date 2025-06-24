@@ -38,7 +38,8 @@ interface AdminStats {
 export default function AdminDashboard() {
   const [selectedReportMonth, setSelectedReportMonth] = useState<string>("");
   const [reportEmail, setReportEmail] = useState("");
-  
+  const [reportFormat, setReportFormat] = useState<string>("csv");
+
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -68,7 +69,7 @@ export default function AdminDashboard() {
   const generateMonthOptions = () => {
     const options = [];
     const currentDate = new Date();
-    
+
     for (let i = 0; i < 12; i++) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
       const monthValue = `${date.getMonth() + 1}-${date.getFullYear()}`;
@@ -76,10 +77,10 @@ export default function AdminDashboard() {
         month: 'long', 
         year: 'numeric' 
       });
-      
+
       options.push({ value: monthValue, label: monthLabel });
     }
-    
+
     return options;
   };
 
@@ -95,7 +96,7 @@ export default function AdminDashboard() {
 
     try {
       const [month, year] = selectedReportMonth.split('-');
-      
+
       if (sendEmail) {
         const response = await fetch('/api/admin/reports/monthly', {
           method: 'POST',
@@ -105,6 +106,7 @@ export default function AdminDashboard() {
             month: parseInt(month),
             year: parseInt(year),
             sendEmail: true,
+            format: reportFormat,
           }),
         });
 
@@ -126,6 +128,7 @@ export default function AdminDashboard() {
             month: parseInt(month),
             year: parseInt(year),
             sendEmail: false,
+            format: reportFormat,
           }),
         });
 
@@ -134,12 +137,12 @@ export default function AdminDashboard() {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `relatorio-${month}-${year}.csv`;
+          a.download = `relatorio-${month}-${year}.${reportFormat === 'pdf' ? 'pdf' : 'csv'}`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
-          
+
           toast({
             title: "Sucesso",
             description: "Relatório baixado com sucesso!",
@@ -163,7 +166,7 @@ export default function AdminDashboard() {
         key: 'report_email',
         value: reportEmail,
       });
-      
+
       toast({
         title: "Sucesso",
         description: "Email salvo com sucesso",
@@ -323,7 +326,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900">Gerar Relatório Mensal</h3>
-                    
+
                     <div>
                       <Label htmlFor="reportMonth">Selecionar Mês</Label>
                       <Select value={selectedReportMonth} onValueChange={setSelectedReportMonth}>
@@ -340,6 +343,19 @@ export default function AdminDashboard() {
                       </Select>
                     </div>
 
+                    <div>
+                      <Label htmlFor="reportFormat">Selecionar Formato</Label>
+                      <Select value={reportFormat} onValueChange={setReportFormat}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o formato" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="csv">CSV</SelectItem>
+                          <SelectItem value="pdf">PDF</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="flex space-x-3">
                       <Button
                         onClick={() => handleGenerateReport(false)}
@@ -347,9 +363,9 @@ export default function AdminDashboard() {
                         className="flex-1 brand-gradient brand-gradient-hover text-white"
                       >
                         <Download className="h-4 w-4 mr-2" />
-                        Baixar CSV
+                        Baixar {reportFormat.toUpperCase()}
                       </Button>
-                      
+
                       <Button
                         onClick={() => handleGenerateReport(true)}
                         disabled={!selectedReportMonth}
@@ -372,7 +388,7 @@ export default function AdminDashboard() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Formato:</span>
-                            <span className="font-medium">CSV (Excel compatível)</span>
+                            <span className="font-medium">{reportFormat.toUpperCase()}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Conteúdo:</span>
@@ -389,7 +405,7 @@ export default function AdminDashboard() {
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card className="bg-yellow-50 border-yellow-200">
                       <CardContent className="pt-4">
                         <div className="flex items-start space-x-2">

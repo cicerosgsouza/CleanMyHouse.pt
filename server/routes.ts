@@ -258,13 +258,13 @@ export function registerRoutes(app: Express): Server {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
-      const { month, year, userId, sendEmail } = req.body;
+      const { month, year, userId, sendEmail, format = 'pdf' } = req.body;
 
       if (!month || !year) {
         return res.status(400).json({ message: "Mês e ano são obrigatórios" });
       }
 
-      const csvBuffer = await reportsService.generateMonthlyReport(Number(month), Number(year), userId);
+      const reportBuffer = await reportsService.generateMonthlyReport(Number(month), Number(year), userId, format);
 
       if (sendEmail) {
         const reportEmailSetting = await storage.getSetting('report_email');
@@ -276,7 +276,7 @@ export function registerRoutes(app: Express): Server {
             year: 'numeric' 
           });
 
-          const emailSent = await emailService.sendReportEmail(reportEmail, csvBuffer, monthName);
+          const emailSent = await emailService.sendReportEmail(reportEmail, reportBuffer, monthName, format);
 
           if (emailSent) {
             res.json({ message: "Relatório enviado por email com sucesso" });
@@ -287,10 +287,15 @@ export function registerRoutes(app: Express): Server {
           res.status(400).json({ message: "Email de destino não configurado" });
         }
       } else {
-        // Return CSV for download
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="relatorio-${month}-${year}.csv"`);
-        res.send(csvBuffer);
+        // Return file for download
+        if (format === 'pdf') {
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `attachment; filename="relatorio-${month}-${year}.pdf"`);
+        } else {
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', `attachment; filename="relatorio-${month}-${year}.csv"`);
+        }
+        res.send(reportBuffer);
       }
     } catch (error) {
       console.error('Erro ao gerar relatório:', error);

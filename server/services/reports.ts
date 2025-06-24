@@ -1,4 +1,5 @@
 import { storage } from '../storage';
+import { pdfGenerator } from './pdf-generator';
 import type { TimeRecord, User } from '@shared/schema';
 
 interface ReportData {
@@ -9,10 +10,11 @@ interface ReportData {
   horaSaida: string;
   localSaida: string;
   horasTrabalhadas: string;
+  status: string;
 }
 
 export class ReportsService {
-  async generateMonthlyReport(month: number, year: number, userId?: string): Promise<Buffer> {
+  async generateMonthlyReport(month: number, year: number, userId?: string, format: 'pdf' | 'csv' = 'pdf'): Promise<Buffer> {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
 
@@ -29,10 +31,17 @@ export class ReportsService {
     // Group records by user and date
     const groupedRecords = this.groupRecordsByUserAndDate(records);
     
-    // Generate CSV content
-    const csvContent = this.generateCSV(groupedRecords);
-    
-    return Buffer.from(csvContent, 'utf-8');
+    if (format === 'pdf') {
+      const monthName = new Date(year, month - 1).toLocaleDateString('pt-BR', { 
+        month: 'long', 
+        year: 'numeric' 
+      });
+      return await pdfGenerator.generateMonthlyReportPDF(groupedRecords, monthName, year);
+    } else {
+      // Generate CSV content
+      const csvContent = this.generateCSV(groupedRecords);
+      return Buffer.from(csvContent, 'utf-8');
+    }
   }
 
   private groupRecordsByUserAndDate(records: (TimeRecord & { user: User })[]): ReportData[] {
@@ -86,6 +95,9 @@ export class ReportsService {
             horasTrabalhadas = `${diffHours.toFixed(2)}h`;
           }
 
+          const status = entry && exit ? 'Completo' : 
+                        entry ? 'Entrada sem saída' : 'Saída sem entrada';
+
           reportData.push({
             funcionario: userName,
             data: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
@@ -94,6 +106,7 @@ export class ReportsService {
             horaSaida: exit ? exit.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '',
             localSaida: exit?.location || '',
             horasTrabalhadas,
+            status,
           });
         }
       });

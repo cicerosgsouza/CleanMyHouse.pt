@@ -71,7 +71,7 @@ class EmailService {
     }
   }
 
-  async sendReportEmail(to: string, csvBuffer: Buffer, month: string): Promise<boolean> {
+  async sendReportEmail(to: string, reportBuffer: Buffer, month: string, format: 'pdf' | 'csv' = 'pdf'): Promise<boolean> {
     if (!this.transporter) {
       console.error('Serviço de email não configurado. Configure EMAIL_USER e EMAIL_PASS nas variáveis de ambiente.');
       return false;
@@ -98,14 +98,17 @@ class EmailService {
               <h3 style="color: #EC4899; margin-top: 0;">Informações do Relatório:</h3>
               <ul style="color: #666; line-height: 1.8;">
                 <li>Período: ${month}</li>
-                <li>Formato: CSV (Excel compatível)</li>
+                <li>Formato: ${format.toUpperCase()} ${format === 'pdf' ? '(Adobe PDF)' : '(Excel comp'}atível)</li>
                 <li>Conteúdo: Registros de entrada e saída com localização</li>
                 <li>Gerado em: ${new Date().toLocaleDateString('pt-BR')}</li>
               </ul>
             </div>
             
             <p style="color: #666; line-height: 1.6;">
-              Para abrir o arquivo, utilize Microsoft Excel, Google Sheets ou qualquer editor de planilhas compatível com CSV.
+              ${format === 'pdf' ? 
+                'Para visualizar o arquivo, utilize qualquer leitor de PDF como Adobe Acrobat Reader, navegador web ou aplicativo de PDF.' :
+                'Para abrir o arquivo, utilize Microsoft Excel, Google Sheets ou qualquer editor de planilhas compatível com CSV.'
+              }
             </p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #999; font-size: 12px;">
@@ -116,9 +119,9 @@ class EmailService {
       `,
       attachments: [
         {
-          filename: `relatorio-ponto-${month.toLowerCase().replace(' ', '-')}.csv`,
-          content: csvBuffer,
-          contentType: 'text/csv',
+          filename: `relatorio-ponto-${month.toLowerCase().replace(' ', '-')}.${format}`,
+          content: reportBuffer,
+          contentType: format === 'pdf' ? 'application/pdf' : 'text/csv',
         },
       ],
     });
