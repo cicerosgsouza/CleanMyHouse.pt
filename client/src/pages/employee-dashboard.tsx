@@ -140,8 +140,17 @@ export default function EmployeeDashboard() {
     },
   });
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      window.location.href = "/";
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      window.location.href = "/";
+    }
   };
 
   const generateMonthOptions = () => {

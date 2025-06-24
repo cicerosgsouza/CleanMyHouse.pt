@@ -64,7 +64,11 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+
+  // Criar usuários de teste se não existirem
+  // Assuming seedUsers is defined elsewhere and imported
+   //await seedUsers();
   });
 })();
