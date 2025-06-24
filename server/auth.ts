@@ -24,14 +24,25 @@ async function hashPassword(password: string): Promise<string> {
 
 async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
   try {
-    if (!stored.includes('.')) {
-      console.log('Invalid password format in database');
+    if (!stored || !stored.includes('.')) {
+      console.log('Invalid password format in database - missing salt separator');
       return false;
     }
     
     const [hashed, salt] = stored.split(".");
+    if (!hashed || !salt) {
+      console.log('Invalid password format - missing hash or salt');
+      return false;
+    }
+    
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    
+    if (hashedBuf.length !== suppliedBuf.length) {
+      console.log(`Buffer length mismatch: stored=${hashedBuf.length}, supplied=${suppliedBuf.length}`);
+      return false;
+    }
+    
     return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
     console.error('Password comparison error:', error);
