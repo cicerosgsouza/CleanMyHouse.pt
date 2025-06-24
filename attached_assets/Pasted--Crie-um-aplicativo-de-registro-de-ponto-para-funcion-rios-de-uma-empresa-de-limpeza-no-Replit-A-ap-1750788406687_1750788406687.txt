@@ -1,0 +1,65 @@
+"Crie um aplicativo de registro de ponto para funcionários de uma empresa de limpeza no Replit. A aplicação deve seguir o estilo visual da logo 'Clean My House', utilizando a paleta de cores predominante rosa/magenta e branco. A fonte principal deve ser semelhante à utilizada na logo, com um design limpo e moderno.
+
+
+Estrutura da Aplicação:
+
+
+Tela de Login:
+
+Design alinhado com a logo, utilizando as cores rosa/magenta e branco.
+Campos para email e senha.
+Após o login, redirecionar o usuário com base no nível de acesso:
+Nível de acesso de usuário: Tela de registro de ponto.
+Nível de acesso administrativo: Painel administrativo.
+Tela de Registro de Ponto (para usuários):
+
+Design intuitivo e fácil de usar.
+Botões destacados para "Registrar Entrada" e "Registrar Saída".
+Ao clicar nos botões, a aplicação deve:
+Capturar automaticamente a localização precisa do usuário (nome da rua, número e código postal, não coordenadas).
+Registrar a hora exata do registro.
+Exibir um campo com os registros do dia, mostrando as entradas e saídas em ordem cronológica.
+Aba "Registros do Mês":
+Calendário para selecionar o mês desejado.
+Listar todos os registros do mês selecionado.
+Botão "Enviar Relatório":
+Gerar uma planilha (ex: CSV) com os registros do mês, agrupando entradas e saídas em pares por linha.
+A planilha deve conter as colunas: "Nome do Funcionário", "Hora de Entrada", "Local de Entrada", "Hora de Saída", "Local de Saída".
+Enviar o relatório por email para o endereço especificado no painel de controle administrativo.
+Painel Administrativo:
+
+Design alinhado com a logo e o restante da aplicação.
+Seção "Visualização em Tempo Real":
+Exibir as entradas e saídas dos funcionários em tempo real.
+Seção "Gerenciamento de Usuários":
+Formulário para cadastro, edição e exclusão de usuários.
+Campos: Nome, Email, Senha, Nível de Acesso (usuário ou administrador).
+Seção "Relatórios Mensais":
+Calendário para selecionar o mês desejado.
+Listar todos os registros do mês selecionado.
+Possibilitar a exportação dos dados em formato de planilha (ex: CSV).
+Campo "Email de Destino do Relatório":
+Permitir que o administrador defina o email para onde os relatórios serão enviados.
+
+Funcionalidades Adicionais (Opcional):
+
+
+Sistema de notificações push para lembrar os funcionários de registrar o ponto.
+Integração com um mapa para visualizar a localização dos funcionários em tempo real (apenas para o painel administrativo).
+Sistema de permissões para restringir o acesso a determinadas funcionalidades do painel administrativo.
+
+Tecnologias Sugeridas:
+
+
+Linguagem de programação: Python com framework Flask ou JavaScript com framework React (escolha a que você se sentir mais confortável).
+Banco de dados: SQLite (simples para Replit) ou PostgreSQL (mais robusto).
+Geolocalização: Utilizar a API de geolocalização do navegador para obter a localização precisa do usuário.
+Geração de planilhas: Biblioteca Pandas (Python) ou SheetJS (JavaScript).
+Envio de email: Biblioteca smtplib (Python) ou Nodemailer (JavaScript).
+
+Observações:
+
+
+Priorize a segurança da aplicação, utilizando senhas fortes e criptografando os dados sensíveis.
+Crie uma interface responsiva que se adapte a diferentes tamanhos de tela (desktop, tablets e smartphones).
+Documente o código de forma clara e concisa para facilitar a manutenção e o desenvolvimento futuro."
