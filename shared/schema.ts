@@ -34,6 +34,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   role: varchar("role").notNull().default("employee"), // 'employee' or 'admin'
   isActive: boolean("is_active").notNull().default(true),
+  isDefaultCredentials: boolean("is_default_credentials").notNull().default(false), // true for test accounts
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

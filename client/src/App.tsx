@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Login from "@/pages/login";
+import ChangeCredentials from "@/pages/change-credentials";
 import EmployeeDashboard from "@/pages/employee-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import NotFound from "@/pages/not-found";
@@ -32,6 +33,18 @@ function Router() {
           <p className="text-gray-600">Carregando...</p>
         </div>
       </div>
+    );
+  }
+
+  // Check if user needs to change default credentials
+  const needsCredentialChange = (user as any)?.isDefaultCredentials;
+  
+  if (needsCredentialChange) {
+    return (
+      <Switch>
+        <Route path="/" component={ChangeCredentials} />
+        <Route component={ChangeCredentials} />
+      </Switch>
     );
   }
 

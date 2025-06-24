@@ -23,10 +23,20 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    if (!stored.includes('.')) {
+      console.log('Invalid password format in database');
+      return false;
+    }
+    
+    const [hashed, salt] = stored.split(".");
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error('Password comparison error:', error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -58,12 +68,26 @@ export function setupAuth(app: Express) {
       { usernameField: 'email' },
       async (email, password, done) => {
         try {
+          console.log('Login attempt for:', email);
           const user = await storage.getUserByEmail(email);
-          if (!user || !(await comparePasswords(password, user.password))) {
+          console.log('User found:', !!user);
+          
+          if (!user) {
+            console.log('User not found');
             return done(null, false);
           }
+          
+          const passwordMatch = await comparePasswords(password, user.password);
+          console.log('Password match:', passwordMatch);
+          
+          if (!passwordMatch) {
+            console.log('Password does not match');
+            return done(null, false);
+          }
+          
           return done(null, user);
         } catch (error) {
+          console.error('Auth error:', error);
           return done(error);
         }
       }
@@ -108,16 +132,26 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
+    console.log('Login request received:', { email: req.body.email });
+    
     passport.authenticate("local", (err: any, user: User | false) => {
+      console.log('Auth callback - err:', !!err, 'user:', !!user);
+      
       if (err) {
+        console.error('Authentication error:', err);
         return res.status(500).json({ message: "Erro interno do servidor" });
       }
       if (!user) {
+        console.log('Authentication failed - user not found or wrong password');
         return res.status(401).json({ message: "Email ou senha incorretos" });
       }
       
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error('Login error:', err);
+          return next(err);
+        }
+        console.log('Login successful for user:', user.email);
         res.status(200).json({ ...user, password: undefined });
       });
     })(req, res, next);

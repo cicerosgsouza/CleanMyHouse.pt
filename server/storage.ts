@@ -157,9 +157,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User> {
-    // Remove password from updates if it's empty (for edit operations)
+    // Remove password from updates if it's empty (for edit operations) 
+    // but keep it if it's being explicitly set for credential changes
     const cleanUpdates = { ...updates };
-    if ('password' in cleanUpdates && !cleanUpdates.password) {
+    if ('password' in cleanUpdates && !cleanUpdates.password && !('isDefaultCredentials' in cleanUpdates)) {
       delete cleanUpdates.password;
     }
     

@@ -31,6 +31,44 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Change credentials route
+  app.post('/api/change-credentials', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email e senha são obrigatórios" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres" });
+      }
+
+      // Check if email is already in use by another user
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser && existingUser.id !== user.id) {
+        return res.status(400).json({ message: "Este email já está em uso" });
+      }
+
+      // Hash the new password
+      const { hashPassword } = await import('./auth');
+      const hashedPassword = await hashPassword(password);
+
+      // Update user credentials
+      const updatedUser = await storage.updateUser(user.id, {
+        email,
+        password: hashedPassword,
+        isDefaultCredentials: false, // Mark as no longer using default credentials
+      });
+
+      res.json({ ...updatedUser, password: undefined });
+    } catch (error) {
+      console.error("Error changing credentials:", error);
+      res.status(500).json({ message: "Erro ao alterar credenciais" });
+    }
+  });
+
   // Time tracking routes
   app.post('/api/time-records', isAuthenticated, async (req: any, res) => {
     try {
