@@ -17,6 +17,7 @@ interface UserFormData {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
   role: 'employee' | 'admin';
 }
 
@@ -27,6 +28,7 @@ export function UserManagementTable() {
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
     role: 'employee'
   });
 
@@ -107,6 +109,7 @@ export function UserManagementTable() {
       firstName: '',
       lastName: '',
       email: '',
+      password: '',
       role: 'employee'
     });
   };
@@ -117,6 +120,7 @@ export function UserManagementTable() {
       firstName: user.firstName || '',
       lastName: user.lastName || '',
       email: user.email || '',
+      password: '', // Don't prefill password for security
       role: user.role as 'employee' | 'admin' || 'employee'
     });
     setIsDialogOpen(true);

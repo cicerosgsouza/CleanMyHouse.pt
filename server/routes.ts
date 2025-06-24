@@ -1,33 +1,40 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertTimeRecordSchema, insertUserSchema } from "@shared/schema";
+import { setupAuth } from "./auth";
+import { insertTimeRecordSchema, insertUserSchema, loginSchema } from "@shared/schema";
 import { reverseGeocode } from "./services/geolocation";
 import { reportsService } from "./services/reports";
 import { emailService } from "./services/email";
 import { z } from "zod";
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+// Authentication middleware
+export const isAuthenticated = (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Não autorizado" });
+  }
+  next();
+};
+
+export function registerRoutes(app: Express): Server {
+  // Auth setup
+  setupAuth(app);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const user = req.user;
+      res.json({ ...user, password: undefined });
     } catch (error) {
       console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      res.status(500).json({ message: "Erro ao buscar usuário" });
     }
   });
 
   // Time tracking routes
   app.post('/api/time-records', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const data = insertTimeRecordSchema.parse({
         ...req.body,
         userId,
@@ -52,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/time-records/today', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const records = await storage.getTodayTimeRecords(userId);
       res.json(records);
     } catch (error) {
@@ -63,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/time-records/monthly', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { month, year } = req.query;
       
       let startDate: Date | undefined;
@@ -85,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get('/api/admin/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }
@@ -106,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/recent-records', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }
@@ -122,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }
@@ -137,18 +144,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/users', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
       const userData = insertUserSchema.parse(req.body);
-      const newUser = await storage.upsertUser({
-        id: `user_${Date.now()}`, // Generate a simple ID
+      // Hash the password before creating the user
+      const { hashPassword } = await import('./auth');
+      const hashedPassword = await hashPassword(userData.password);
+      
+      const newUser = await storage.createUser({
         ...userData,
+        password: hashedPassword,
       });
 
-      res.json(newUser);
+      res.json({ ...newUser, password: undefined });
     } catch (error) {
       console.error("Error creating user:", error);
       res.status(400).json({ message: "Erro ao criar usuário" });
@@ -157,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/admin/users/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }
@@ -165,8 +176,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const updates = req.body;
       
-      const updatedUser = await storage.updateUser(id, updates);
-      res.json(updatedUser);
+      // Hash password if provided
+      if (updates.password) {
+        const { hashPassword } = await import('./auth');
+        updates.password = await hashPassword(updates.password);
+      }
+      
+      const updatedUser = await storage.updateUser(parseInt(id), updates);
+      res.json({ ...updatedUser, password: undefined });
     } catch (error) {
       console.error("Error updating user:", error);
       res.status(400).json({ message: "Erro ao atualizar usuário" });
@@ -175,13 +192,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/admin/users/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
       const { id } = req.params;
-      await storage.deactivateUser(id);
+      await storage.deactivateUser(parseInt(id));
       res.json({ message: "Usuário desativado com sucesso" });
     } catch (error) {
       console.error("Error deactivating user:", error);
@@ -192,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reports routes
   app.post('/api/admin/reports/monthly', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }
@@ -240,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Settings routes
   app.get('/api/admin/settings/:key', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }
@@ -256,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/settings', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }

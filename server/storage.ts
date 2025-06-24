@@ -14,21 +14,21 @@ import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 // Interface for storage operations
 export interface IStorage {
   // User operations
-  // (IMPORTANT) these user operations are mandatory for Replit Auth.
-  getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: Omit<UpsertUser, 'id' | 'createdAt' | 'updatedAt'>): Promise<User>;
   
   // Time record operations
   createTimeRecord(record: InsertTimeRecord): Promise<TimeRecord>;
-  getUserTimeRecords(userId: string, startDate?: Date, endDate?: Date): Promise<TimeRecord[]>;
+  getUserTimeRecords(userId: number, startDate?: Date, endDate?: Date): Promise<TimeRecord[]>;
   getAllTimeRecords(startDate?: Date, endDate?: Date): Promise<(TimeRecord & { user: User })[]>;
-  getTodayTimeRecords(userId: string): Promise<TimeRecord[]>;
+  getTodayTimeRecords(userId: number): Promise<TimeRecord[]>;
   getRecentTimeRecords(limit?: number): Promise<(TimeRecord & { user: User })[]>;
   
   // User management operations
   getAllUsers(): Promise<User[]>;
-  updateUser(id: string, updates: Partial<User>): Promise<User>;
-  deactivateUser(id: string): Promise<void>;
+  updateUser(id: number, updates: Partial<User>): Promise<User>;
+  deactivateUser(id: number): Promise<void>;
   
   // Settings operations
   getSetting(key: string): Promise<Setting | undefined>;
@@ -43,24 +43,20 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // User operations
-  // (IMPORTANT) these user operations are mandatory for Replit Auth.
-
-  async getUser(id: string): Promise<User | undefined> {
+  async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: Omit<UpsertUser, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
     const [user] = await db
       .insert(users)
       .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
       .returning();
     return user;
   }
@@ -74,7 +70,7 @@ export class DatabaseStorage implements IStorage {
     return timeRecord;
   }
 
-  async getUserTimeRecords(userId: string, startDate?: Date, endDate?: Date): Promise<TimeRecord[]> {
+  async getUserTimeRecords(userId: number, startDate?: Date, endDate?: Date): Promise<TimeRecord[]> {
     if (startDate && endDate) {
       return db.select().from(timeRecords).where(
         and(
@@ -121,7 +117,7 @@ export class DatabaseStorage implements IStorage {
     }).from(timeRecords).innerJoin(users, eq(timeRecords.userId, users.id)).orderBy(desc(timeRecords.timestamp));
   }
 
-  async getTodayTimeRecords(userId: string): Promise<TimeRecord[]> {
+  async getTodayTimeRecords(userId: number): Promise<TimeRecord[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -160,16 +156,22 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(users).where(eq(users.isActive, true));
   }
 
-  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+  async updateUser(id: number, updates: Partial<User>): Promise<User> {
+    // Remove password from updates if it's empty (for edit operations)
+    const cleanUpdates = { ...updates };
+    if ('password' in cleanUpdates && !cleanUpdates.password) {
+      delete cleanUpdates.password;
+    }
+    
     const [user] = await db
       .update(users)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...cleanUpdates, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return user;
   }
 
-  async deactivateUser(id: string): Promise<void> {
+  async deactivateUser(id: number): Promise<void> {
     await db
       .update(users)
       .set({ isActive: false, updatedAt: new Date() })

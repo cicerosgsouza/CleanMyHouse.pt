@@ -8,6 +8,7 @@ import {
   serial,
   boolean,
   decimal,
+  integer,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -24,14 +25,13 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table.
-// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+// User storage table for local authentication
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique(),
+  id: serial("id").primaryKey(),
+  email: varchar("email").unique().notNull(),
+  password: varchar("password").notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
   role: varchar("role").notNull().default("employee"), // 'employee' or 'admin'
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -41,7 +41,7 @@ export const users = pgTable("users", {
 // Time records table for punch in/out tracking
 export const timeRecords = pgTable("time_records", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id),
   type: varchar("type").notNull(), // 'entry' or 'exit'
   timestamp: timestamp("timestamp").notNull().defaultNow(),
   location: text("location"), // Full address string
@@ -68,11 +68,18 @@ export const insertTimeRecordSchema = createInsertSchema(timeRecords).omit({
 
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
+  password: true,
   firstName: true,
   lastName: true,
   role: true,
 });
 
+export const loginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+});
+
 export type InsertTimeRecord = z.infer<typeof insertTimeRecordSchema>;
 export type TimeRecord = typeof timeRecords.$inferSelect;
 export type Setting = typeof settings.$inferSelect;
+export type LoginData = z.infer<typeof loginSchema>;
