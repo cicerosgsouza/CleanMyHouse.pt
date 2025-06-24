@@ -67,8 +67,8 @@ app.use((req, res, next) => {
   }, async () => {
     log(`serving on port ${port}`);
 
-  // Criar usuários de teste se não existirem
-  // Assuming seedUsers is defined elsewhere and imported
-   //await seedUsers();
+    // Criar usuários de teste se não existirem
+    const { seedUsers } = await import('./seed-users');
+    await seedUsers();
   });
 })();
