@@ -88,9 +88,11 @@ export function RealTimeFeed() {
                       </div>
                       
                       {record.location && (
-                        <div className="flex items-center text-sm text-gray-600">
+                        <div className="flex items-center text-sm text-gray-600 max-w-full">
                           <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span className="truncate">{record.location}</span>
+                          <span className="truncate max-w-[200px] sm:max-w-[300px]" title={record.location}>
+                            {record.location}
+                          </span>
                         </div>
                       )}
                     </div>

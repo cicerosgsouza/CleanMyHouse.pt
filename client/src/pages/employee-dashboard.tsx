@@ -233,8 +233,14 @@ export default function EmployeeDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Button
             onClick={() => recordTimeMutation.mutate('entry')}
-            disabled={recordTimeMutation.isPending}
-            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-6 h-auto rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-200"
+            disabled={recordTimeMutation.isPending || currentStatus === 'in'}
+            className={`${
+              currentStatus === 'in' 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+            } text-white p-6 h-auto rounded-2xl shadow-lg transform transition-all duration-200 ${
+              currentStatus === 'out' ? 'hover:scale-105' : ''
+            }`}
           >
             <div className="text-center">
               {recordTimeMutation.isPending ? (
@@ -243,14 +249,22 @@ export default function EmployeeDashboard() {
                 <LogIn className="h-8 w-8 mb-3 mx-auto" />
               )}
               <h3 className="text-xl font-semibold mb-2">Registrar Entrada</h3>
-              <p className="text-green-100 text-sm">Clique para marcar sua chegada</p>
+              <p className={`text-sm ${currentStatus === 'in' ? 'text-gray-200' : 'text-green-100'}`}>
+                {currentStatus === 'in' ? 'Você já está em expediente' : 'Clique para marcar sua chegada'}
+              </p>
             </div>
           </Button>
 
           <Button
             onClick={() => recordTimeMutation.mutate('exit')}
-            disabled={recordTimeMutation.isPending}
-            className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-6 h-auto rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-200"
+            disabled={recordTimeMutation.isPending || currentStatus === 'out'}
+            className={`${
+              currentStatus === 'out' 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+            } text-white p-6 h-auto rounded-2xl shadow-lg transform transition-all duration-200 ${
+              currentStatus === 'in' ? 'hover:scale-105' : ''
+            }`}
           >
             <div className="text-center">
               {recordTimeMutation.isPending ? (
@@ -259,7 +273,9 @@ export default function EmployeeDashboard() {
                 <LogOut className="h-8 w-8 mb-3 mx-auto" />
               )}
               <h3 className="text-xl font-semibold mb-2">Registrar Saída</h3>
-              <p className="text-red-100 text-sm">Clique para marcar sua saída</p>
+              <p className={`text-sm ${currentStatus === 'out' ? 'text-gray-200' : 'text-red-100'}`}>
+                {currentStatus === 'out' ? 'Você precisa primeiro dar entrada' : 'Clique para marcar sua saída'}
+              </p>
             </div>
           </Button>
         </div>

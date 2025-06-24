@@ -290,24 +290,22 @@ export default function AdminDashboard() {
         <Card className="shadow-lg">
           <Tabs defaultValue="realtime" className="w-full">
             <CardHeader className="pb-0">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
-                <TabsTrigger value="realtime" className="flex items-center justify-center text-xs sm:text-sm px-2 sm:px-3">
-                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Tempo Real</span>
-                  <span className="sm:hidden">Tempo</span>
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto">
+                <TabsTrigger value="realtime" className="flex flex-col sm:flex-row items-center justify-center text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 h-auto min-h-[44px]">
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mb-1 sm:mb-0 sm:mr-2" />
+                  <span className="text-center leading-tight">Tempo Real</span>
                 </TabsTrigger>
-                <TabsTrigger value="users" className="flex items-center justify-center text-xs sm:text-sm px-2 sm:px-3">
-                  <UserCog className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span>Usuários</span>
+                <TabsTrigger value="users" className="flex flex-col sm:flex-row items-center justify-center text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 h-auto min-h-[44px]">
+                  <UserCog className="h-3 w-3 sm:h-4 sm:w-4 mb-1 sm:mb-0 sm:mr-2" />
+                  <span className="text-center leading-tight">Usuários</span>
                 </TabsTrigger>
-                <TabsTrigger value="reports" className="flex items-center justify-center text-xs sm:text-sm px-2 sm:px-3">
-                  <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span>Relatórios</span>
+                <TabsTrigger value="reports" className="flex flex-col sm:flex-row items-center justify-center text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 h-auto min-h-[44px]">
+                  <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mb-1 sm:mb-0 sm:mr-2" />
+                  <span className="text-center leading-tight">Relatórios</span>
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center justify-center text-xs sm:text-sm px-2 sm:px-3">
-                  <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Configurações</span>
-                  <span className="sm:hidden">Config</span>
+                <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center justify-center text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 h-auto min-h-[44px]">
+                  <Settings className="h-3 w-3 sm:h-4 sm:w-4 mb-1 sm:mb-0 sm:mr-2" />
+                  <span className="text-center leading-tight">Config</span>
                 </TabsTrigger>
               </TabsList>
             </CardHeader>

@@ -88,7 +88,7 @@ export class ReportsService {
 
           reportData.push({
             funcionario: userName,
-            data: new Date(date).toLocaleDateString('pt-BR'),
+            data: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
             horaEntrada: entry ? entry.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '',
             localEntrada: entry?.location || '',
             horaSaida: exit ? exit.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '',
@@ -139,10 +139,8 @@ export class ReportsService {
   }
 
   private escapeCSV(value: string): string {
-    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-      return `"${value.replace(/"/g, '""')}"`;
-    }
-    return value;
+    // Always quote values to prevent Excel formatting issues
+    return `"${value.replace(/"/g, '""')}"`;
   }
 }
 
