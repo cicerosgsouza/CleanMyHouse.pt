@@ -214,10 +214,16 @@ export function registerRoutes(app: Express): Server {
       const { id } = req.params;
       const updates = req.body;
       
-      // Hash password if provided
-      if (updates.password) {
+      // Hash password if provided and not empty
+      if (updates.password && updates.password.trim() !== '') {
+        if (updates.password.length < 6) {
+          return res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres" });
+        }
         const { hashPassword } = await import('./auth');
         updates.password = await hashPassword(updates.password);
+      } else {
+        // Remove password field if empty to avoid updating with empty value
+        delete updates.password;
       }
       
       const updatedUser = await storage.updateUser(parseInt(id), updates);

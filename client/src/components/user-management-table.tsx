@@ -129,7 +129,12 @@ export function UserManagementTable() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingUser) {
-      updateUserMutation.mutate({ id: editingUser.id, userData: formData });
+      // Para edição, só inclui a senha se foi fornecida
+      const updateData = { ...formData };
+      if (!updateData.password) {
+        delete updateData.password;
+      }
+      updateUserMutation.mutate({ id: editingUser.id, userData: updateData });
     } else {
       createUserMutation.mutate(formData);
     }
@@ -202,6 +207,19 @@ export function UserManagementTable() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="Digite o e-mail"
                   required
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">
+                  {editingUser ? 'Nova Senha (deixe em branco para manter a atual)' : 'Senha'}
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder={editingUser ? "Digite apenas se quiser alterar" : "Digite a senha"}
+                  required={!editingUser}
                 />
               </div>
               <div>
