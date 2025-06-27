@@ -39,6 +39,9 @@ export interface IStorage {
   getTodayEntriesCount(): Promise<number>;
   getTodayExitsCount(): Promise<number>;
   getCurrentlyWorkingCount(): Promise<number>;
+  
+  // Delete operations
+  deleteTimeRecordsByMonth(month: number, year: number, userIds?: number[]): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {

@@ -268,7 +268,7 @@ export function registerRoutes(app: Express): Server {
       }
 
       console.log('Gerando relatório...');
-      const reportBuffer = await reportsService.generateMonthlyReport(Number(month), Number(year), userId, format);
+      const reportBuffer = await reportsService.generateMonthlyReport(Number(month), Number(year), userId, 'pdf');
       console.log(`Relatório gerado com sucesso. Tamanho: ${reportBuffer.length} bytes`);
 
       if (sendEmail) {
@@ -297,14 +297,9 @@ export function registerRoutes(app: Express): Server {
         }
       } else {
         console.log('Retornando arquivo para download...');
-        // Return file for download
-        if (format === 'pdf') {
-          res.setHeader('Content-Type', 'application/pdf');
-          res.setHeader('Content-Disposition', `attachment; filename="relatorio-${month}-${year}.pdf"`);
-        } else {
-          res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-          res.setHeader('Content-Disposition', `attachment; filename="relatorio-${month}-${year}.csv"`);
-        }
+        // Return PDF file for download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="relatorio-${month}-${year}.pdf"`);
         res.send(reportBuffer);
         console.log('Arquivo enviado para download');
       }

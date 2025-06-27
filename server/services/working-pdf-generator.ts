@@ -268,12 +268,14 @@ startxref
     let totalMinutes = 0;
     
     records.forEach(record => {
-      if (record.horasTrabalhadas && record.horasTrabalhadas !== '0') {
+      if (record.horasTrabalhadas && record.horasTrabalhadas !== '0:00' && record.horasTrabalhadas !== '0') {
         const parts = record.horasTrabalhadas.split(':');
         if (parts.length === 2) {
           const hours = parseInt(parts[0]) || 0;
           const minutes = parseInt(parts[1]) || 0;
-          totalMinutes += hours * 60 + minutes;
+          if (hours >= 0 && minutes >= 0) {
+            totalMinutes += hours * 60 + minutes;
+          }
         }
       }
     });
