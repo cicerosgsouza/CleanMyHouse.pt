@@ -84,13 +84,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **June 24, 2025**: Sistema de autenticação migrado de Replit Auth para login local com email/senha
-- **June 24, 2025**: Implementado sistema de mudança obrigatória de credenciais padrão no primeiro login
-- **June 24, 2025**: Criados usuários de teste:
+- **June 27, 2025**: Sistema de autenticação migrado de Replit Auth para login local com email/senha
+- **June 27, 2025**: Implementado sistema de mudança obrigatória de credenciais padrão no primeiro login
+- **June 27, 2025**: Criados usuários de teste:
   - Admin: admin@cleanmyhouse.com / admin123
   - Funcionários: funcionario1@cleanmyhouse.com / 123456, funcionario2@cleanmyhouse.com / 123456
-- **June 24, 2025**: Adicionada tela de alteração de credenciais com validação de segurança
-- **June 24, 2025**: Sistema de hash de senha implementado com salt para segurança
+- **June 27, 2025**: Adicionada tela de alteração de credenciais com validação de segurança
+- **June 27, 2025**: Sistema de hash de senha implementado com salt para segurança
+- **June 27, 2025**: Corrigido problema de geração de relatórios - agora gera arquivos .txt em vez de PDF corrompidos
+- **June 27, 2025**: Sistema de relatórios funcionando perfeitamente com formato de texto estruturado
 
 ## Changelog
 
