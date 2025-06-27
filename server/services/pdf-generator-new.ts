@@ -1,4 +1,5 @@
 import type { TimeRecord, User } from '@shared/schema';
+import PDFDocument from 'pdfkit';
 
 interface ReportData {
   funcionario: string;
@@ -21,7 +22,6 @@ export class PDFGenerator {
     
     return new Promise<Buffer>((resolve, reject) => {
       try {
-        const PDFDocument = require('pdfkit');
         const doc = new PDFDocument({
           size: 'A4',
           margin: 50
