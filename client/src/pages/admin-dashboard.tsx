@@ -63,6 +63,8 @@ export default function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
     queryKey: ['/api/admin/stats'],
     refetchInterval: 30000, // Refresh every 30 seconds
+    refetchOnWindowFocus: false,
+    staleTime: 25000,
   });
 
   const { data: emailSetting } = useQuery({
