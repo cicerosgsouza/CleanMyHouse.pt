@@ -179,7 +179,7 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
-                <p className="text-sm text-gray-600">Clean My House - Sistema de Ponto</p>
+                <p className="text-sm text-gray-600" translate="no">Clean My House - Sistema de Ponto</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -438,7 +438,7 @@ export default function AdminDashboard() {
                       <div className="grid gap-4">
                         <div>
                           <Label htmlFor="reportEmail">Email para Relatórios</Label>
-                          <div className="flex gap-2 mt-1">
+                          <div className="flex flex-col sm:flex-row gap-2 mt-1">
                             <input
                               id="reportEmail"
                               type="email"
@@ -466,7 +466,7 @@ export default function AdminDashboard() {
                                   });
                                 }
                               }}
-                              className="brand-gradient brand-gradient-hover text-white"
+                              className="brand-gradient brand-gradient-hover text-white w-full sm:w-auto"
                             >
                               Salvar
                             </Button>

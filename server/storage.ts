@@ -9,7 +9,7 @@ import {
   type Setting,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql, inArray } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -253,6 +253,30 @@ export class DatabaseStorage implements IStorage {
     const todayEntries = await this.getTodayEntriesCount();
     const todayExits = await this.getTodayExitsCount();
     return Math.max(0, todayEntries - todayExits);
+  }
+
+  async deleteTimeRecordsByMonth(month: number, year: number, userIds?: number[]): Promise<number> {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    let whereCondition = and(
+      gte(timeRecords.timestamp, startDate),
+      lte(timeRecords.timestamp, endDate)
+    );
+
+    if (userIds && userIds.length > 0) {
+      whereCondition = and(
+        whereCondition,
+        inArray(timeRecords.userId, userIds)
+      );
+    }
+
+    const deletedRecords = await db
+      .delete(timeRecords)
+      .where(whereCondition)
+      .returning({ id: timeRecords.id });
+
+    return deletedRecords.length;
   }
 }
 
