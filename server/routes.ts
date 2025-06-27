@@ -362,6 +362,39 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Delete time records by month and users (admin only)
+  app.delete('/api/admin/time-records/month', isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const { month, year, userIds } = req.body;
+
+      if (!month || !year) {
+        return res.status(400).json({ message: "Mês e ano são obrigatórios" });
+      }
+
+      console.log(`Deletando registros para: mês=${month}, ano=${year}, usuários=${userIds || 'todos'}`);
+      
+      const deletedCount = await storage.deleteTimeRecordsByMonth(
+        Number(month), 
+        Number(year), 
+        userIds && userIds.length > 0 ? userIds : undefined
+      );
+      
+      console.log(`Registros deletados: ${deletedCount}`);
+      
+      res.json({ 
+        message: `${deletedCount} registro(s) foram apagados com sucesso`,
+        deletedCount 
+      });
+    } catch (error) {
+      console.error('Erro ao deletar registros:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

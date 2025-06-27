@@ -36,9 +36,12 @@ interface AdminStats {
 }
 
 export default function AdminDashboard() {
-  const [selectedReportMonth, setSelectedReportMonth] = useState<string>("");
+  const [reportMonth, setReportMonth] = useState(new Date().getMonth() + 1);
+  const [reportYear, setReportYear] = useState(new Date().getFullYear());
+  const [deleteMonth, setDeleteMonth] = useState(new Date().getMonth() + 1);
+  const [deleteYear, setDeleteYear] = useState(new Date().getFullYear());
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [reportEmail, setReportEmail] = useState("");
-  const [reportFormat, setReportFormat] = useState<string>("csv");
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,6 +54,10 @@ export default function AdminDashboard() {
   const { data: emailSetting } = useQuery({
     queryKey: ['/api/admin/settings/report_email'],
     select: (data) => data?.value || '',
+  });
+
+  const { data: users } = useQuery<User[]>({
+    queryKey: ['/api/admin/users'],
   });
 
   const handleLogout = async () => {
@@ -66,22 +73,45 @@ export default function AdminDashboard() {
     }
   };
 
-  const generateMonthOptions = () => {
-    const options = [];
-    const currentDate = new Date();
-
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-      const monthValue = `${date.getMonth() + 1}-${date.getFullYear()}`;
-      const monthLabel = date.toLocaleDateString('pt-BR', { 
-        month: 'long', 
-        year: 'numeric' 
+  const handleDownloadReport = async () => {
+    try {
+      const response = await fetch('/api/admin/reports/monthly', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          month: reportMonth,
+          year: reportYear,
+          sendEmail: false,
+          format: 'pdf',
+        }),
       });
 
-      options.push({ value: monthValue, label: monthLabel });
-    }
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `relatorio-${reportMonth}-${reportYear}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
 
-    return options;
+        toast({
+          title: "Sucesso",
+          description: "Relatório PDF baixado com sucesso!",
+        });
+      } else {
+        throw new Error('Erro ao gerar relatório');
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao baixar relatório",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleGenerateReport = async (sendEmail = false) => {
@@ -154,7 +184,39 @@ export default function AdminDashboard() {
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Erro ao processar relatório",
+        description: "Erro ao baixar relatório",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteRecords = async () => {
+    try {
+      const response = await fetch('/api/admin/time-records/month', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          month: deleteMonth,
+          year: deleteYear,
+          userIds: selectedUsers.length > 0 ? selectedUsers : undefined
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Sucesso",
+          description: result.message || "Registros apagados com sucesso!",
+        });
+        setSelectedUsers([]);
+      } else {
+        throw new Error('Erro ao apagar registros');
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao apagar registros",
         variant: "destructive",
       });
     }
