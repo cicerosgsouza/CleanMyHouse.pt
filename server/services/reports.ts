@@ -1,5 +1,5 @@
 import { storage } from '../storage';
-import { pdfGenerator } from './pdf-generator';
+import { pdfGenerator } from './pdf-generator-new';
 import type { TimeRecord, User } from '@shared/schema';
 
 interface ReportData {

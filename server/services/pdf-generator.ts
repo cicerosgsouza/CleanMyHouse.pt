@@ -1,5 +1,4 @@
 
-import puppeteer from 'puppeteer';
 import type { TimeRecord, User } from '@shared/schema';
 
 interface ReportData {
