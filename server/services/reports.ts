@@ -1,6 +1,8 @@
 import { storage } from '../storage';
-import { simplePdfGenerator } from './simple-pdf-generator';
 import type { TimeRecord, User } from '@shared/schema';
+import { db } from '../db';
+import { users, timeRecords } from '@shared/schema';
+import { eq, and, gte, lte } from 'drizzle-orm';
 
 interface ReportData {
   funcionario: string;
@@ -41,14 +43,14 @@ export class ReportsService {
     console.log(`Dados agrupados: ${groupedRecords.length} linhas`);
     
     if (format === 'pdf') {
-      console.log('Iniciando geração de PDF...');
-      const monthName = new Date(year, month - 1).toLocaleDateString('pt-BR', { 
-        month: 'long', 
-        year: 'numeric' 
-      });
-      const pdfBuffer = await pdfGenerator.generateMonthlyReportPDF(groupedRecords, monthName, year);
-      console.log('PDF gerado com sucesso');
-      return pdfBuffer;
+      console.log('Gerando relatório em texto...');
+      const monthNames = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+      const textReport = this.generateTextReport(groupedRecords, monthNames[month - 1], year);
+      console.log('Relatório de texto gerado com sucesso');
+      return Buffer.from(textReport, 'utf-8');
     } else {
       console.log('Gerando CSV...');
       const csvContent = this.generateCSV(groupedRecords);
@@ -162,6 +164,81 @@ export class ReportsService {
     });
 
     return csvRows.join('\r\n');
+  }
+
+  private generateTextReport(data: ReportData[], month: string, year: number): string {
+    let content = '';
+    content += '='.repeat(60) + '\n';
+    content += '           CLEAN MY HOUSE - RELATÓRIO MENSAL\n';
+    content += '='.repeat(60) + '\n';
+    content += `Período: ${month} de ${year}\n`;
+    content += `Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}\n`;
+    content += '='.repeat(60) + '\n\n';
+    
+    if (!data || data.length === 0) {
+      content += 'Nenhum registro encontrado para o período selecionado.\n\n';
+    } else {
+      // Agrupar dados por funcionário
+      const groupedData = this.groupByEmployee(data);
+      
+      Object.entries(groupedData).forEach(([employee, records]) => {
+        content += `FUNCIONÁRIO: ${employee}\n`;
+        content += '-'.repeat(40) + '\n';
+        
+        records.forEach(record => {
+          content += `Data: ${record.data}\n`;
+          content += `Entrada: ${record.horaEntrada} - ${this.truncateLocation(record.localEntrada || 'N/A')}\n`;
+          content += `Saída: ${record.horaSaida} - ${this.truncateLocation(record.localSaida || 'N/A')}\n`;
+          content += `Horas trabalhadas: ${record.horasTrabalhadas}\n`;
+          content += `Status: ${record.status}\n`;
+          content += '\n';
+        });
+        
+        const totalHours = this.calculateTotalHours(records);
+        content += `TOTAL DE HORAS NO MÊS: ${totalHours}h\n`;
+        content += '='.repeat(40) + '\n\n';
+      });
+    }
+    
+    content += 'Relatório gerado pelo sistema Clean My House\n';
+    content += '='.repeat(60) + '\n';
+    
+    return content;
+  }
+
+  private groupByEmployee(data: ReportData[]): Record<string, ReportData[]> {
+    return data.reduce((acc, record) => {
+      if (!acc[record.funcionario]) {
+        acc[record.funcionario] = [];
+      }
+      acc[record.funcionario].push(record);
+      return acc;
+    }, {} as Record<string, ReportData[]>);
+  }
+
+  private calculateTotalHours(records: ReportData[]): string {
+    let totalMinutes = 0;
+    
+    records.forEach(record => {
+      if (record.horasTrabalhadas && record.horasTrabalhadas !== '0') {
+        const parts = record.horasTrabalhadas.split(':');
+        if (parts.length === 2) {
+          const hours = parseInt(parts[0]) || 0;
+          const minutes = parseInt(parts[1]) || 0;
+          totalMinutes += hours * 60 + minutes;
+        }
+      }
+    });
+    
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+  }
+
+  private truncateLocation(location: string): string {
+    if (!location || location === 'N/A') return 'N/A';
+    return location.length > 50 ? location.substring(0, 47) + '...' : location;
   }
 
   private escapeCSV(value: string): string {
