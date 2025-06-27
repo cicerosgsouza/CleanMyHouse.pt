@@ -15,31 +15,44 @@ interface ReportData {
 
 export class ReportsService {
   async generateMonthlyReport(month: number, year: number, userId?: string, format: 'pdf' | 'csv' = 'pdf'): Promise<Buffer> {
+    console.log(`Gerando relatório para: mês=${month}, ano=${year}, usuário=${userId || 'todos'}, formato=${format}`);
+    
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
+    console.log(`Período: ${startDate.toISOString()} até ${endDate.toISOString()}`);
 
     let records: (TimeRecord & { user: User })[];
     
     if (userId) {
+      console.log(`Buscando registros do usuário ${userId}...`);
       const userRecords = await storage.getUserTimeRecords(userId, startDate, endDate);
       const user = await storage.getUser(userId);
       records = userRecords.map(record => ({ ...record, user: user! }));
+      console.log(`Encontrados ${userRecords.length} registros para o usuário`);
     } else {
+      console.log('Buscando todos os registros...');
       records = await storage.getAllTimeRecords(startDate, endDate);
+      console.log(`Encontrados ${records.length} registros totais`);
     }
 
     // Group records by user and date
+    console.log('Agrupando registros por usuário e data...');
     const groupedRecords = this.groupRecordsByUserAndDate(records);
+    console.log(`Dados agrupados: ${groupedRecords.length} linhas`);
     
     if (format === 'pdf') {
+      console.log('Iniciando geração de PDF...');
       const monthName = new Date(year, month - 1).toLocaleDateString('pt-BR', { 
         month: 'long', 
         year: 'numeric' 
       });
-      return await pdfGenerator.generateMonthlyReportPDF(groupedRecords, monthName, year);
+      const pdfBuffer = await pdfGenerator.generateMonthlyReportPDF(groupedRecords, monthName, year);
+      console.log('PDF gerado com sucesso');
+      return pdfBuffer;
     } else {
-      // Generate CSV content
+      console.log('Gerando CSV...');
       const csvContent = this.generateCSV(groupedRecords);
+      console.log('CSV gerado com sucesso');
       return Buffer.from(csvContent, 'utf-8');
     }
   }

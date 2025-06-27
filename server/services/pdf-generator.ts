@@ -19,36 +19,75 @@ export class PDFGenerator {
     month: string,
     year: number
   ): Promise<Buffer> {
-    const html = this.generateHTML(data, month, year);
+    let browser;
     
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1920x1080'
-      ]
-    });
-    
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm'
+    try {
+      console.log('Iniciando geração de PDF...');
+      const html = this.generateHTML(data, month, year);
+      
+      console.log('Lançando navegador...');
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu',
+          '--disable-extensions',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI',
+          '--disable-default-apps',
+          '--no-first-run',
+          '--window-size=1920x1080'
+        ],
+        timeout: 60000 // 60 segundos timeout
+      });
+      
+      console.log('Criando nova página...');
+      const page = await browser.newPage();
+      
+      // Configurar timeout para a página
+      page.setDefaultTimeout(30000);
+      page.setDefaultNavigationTimeout(30000);
+      
+      console.log('Definindo conteúdo HTML...');
+      await page.setContent(html, { 
+        waitUntil: 'domcontentloaded',
+        timeout: 30000 
+      });
+      
+      console.log('Gerando PDF...');
+      const pdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '20mm',
+          right: '15mm',
+          bottom: '20mm',
+          left: '15mm'
+        },
+        timeout: 30000
+      });
+      
+      console.log('PDF gerado com sucesso!');
+      return Buffer.from(pdf);
+      
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      throw new Error(`Falha na geração do PDF: ${error.message}`);
+    } finally {
+      if (browser) {
+        try {
+          await browser.close();
+          console.log('Navegador fechado com sucesso.');
+        } catch (closeError) {
+          console.error('Erro ao fechar navegador:', closeError);
+        }
       }
-    });
-    
-    await browser.close();
-    return Buffer.from(pdf);
+    }
   }
 
   private generateHTML(data: ReportData[], month: string, year: number): string {
