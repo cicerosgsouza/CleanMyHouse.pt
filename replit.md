@@ -91,8 +91,8 @@ Preferred communication style: Simple, everyday language.
   - Funcionários: funcionario1@cleanmyhouse.com / 123456, funcionario2@cleanmyhouse.com / 123456
 - **June 27, 2025**: Adicionada tela de alteração de credenciais com validação de segurança
 - **June 27, 2025**: Sistema de hash de senha implementado com salt para segurança
-- **June 27, 2025**: Corrigido problema de geração de relatórios - agora gera arquivos .txt em vez de PDF corrompidos
-- **June 27, 2025**: Sistema de relatórios funcionando perfeitamente com formato de texto estruturado
+- **June 27, 2025**: Implementado gerador de PDF funcional usando jsPDF para relatórios reais
+- **June 27, 2025**: Sistema de relatórios agora gera PDFs válidos que abrem corretamente
 
 ## Changelog
 

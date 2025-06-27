@@ -3,6 +3,7 @@ import type { TimeRecord, User } from '@shared/schema';
 import { db } from '../db';
 import { users, timeRecords } from '@shared/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
+import { workingPdfGenerator } from './working-pdf-generator';
 
 interface ReportData {
   funcionario: string;
@@ -43,14 +44,18 @@ export class ReportsService {
     console.log(`Dados agrupados: ${groupedRecords.length} linhas`);
     
     if (format === 'pdf') {
-      console.log('Gerando relatório em texto...');
+      console.log('Gerando PDF real...');
       const monthNames = [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
       ];
-      const textReport = this.generateTextReport(groupedRecords, monthNames[month - 1], year);
-      console.log('Relatório de texto gerado com sucesso');
-      return Buffer.from(textReport, 'utf-8');
+      const pdfBuffer = await workingPdfGenerator.generateMonthlyReportPDF(
+        groupedRecords, 
+        monthNames[month - 1], 
+        year
+      );
+      console.log('PDF real gerado com sucesso');
+      return pdfBuffer;
     } else {
       console.log('Gerando CSV...');
       const csvContent = this.generateCSV(groupedRecords);

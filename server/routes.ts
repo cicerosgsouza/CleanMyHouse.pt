@@ -299,8 +299,8 @@ export function registerRoutes(app: Express): Server {
         console.log('Retornando arquivo para download...');
         // Return file for download
         if (format === 'pdf') {
-          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-          res.setHeader('Content-Disposition', `attachment; filename="relatorio-${month}-${year}.txt"`);
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `attachment; filename="relatorio-${month}-${year}.pdf"`);
         } else {
           res.setHeader('Content-Type', 'text/csv; charset=utf-8');
           res.setHeader('Content-Disposition', `attachment; filename="relatorio-${month}-${year}.csv"`);
