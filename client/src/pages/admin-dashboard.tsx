@@ -1,17 +1,28 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
-  Users, 
-  LogIn, 
-  LogOut, 
   Clock, 
   Home, 
   Eye, 
@@ -19,7 +30,9 @@ import {
   BarChart3, 
   Settings,
   Download,
-  Mail
+  Mail,
+  FileText,
+  Trash2
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { RealTimeFeed } from "@/components/real-time-feed";
@@ -27,6 +40,7 @@ import { UserManagementTable } from "@/components/user-management-table";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import type { User } from "@shared/schema";
 
 interface AdminStats {
   activeEmployees: number;
@@ -68,7 +82,7 @@ export default function AdminDashboard() {
       });
       window.location.href = "/";
     } catch (error) {
-      console.error('Erro no logout:', error);
+      console.error("Logout error:", error);
       window.location.href = "/";
     }
   };
@@ -114,92 +128,16 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleGenerateReport = async (sendEmail = false) => {
-    if (!selectedReportMonth) {
-      toast({
-        title: "Erro",
-        description: "Selecione um mês para gerar o relatório",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const [month, year] = selectedReportMonth.split('-');
-
-      if (sendEmail) {
-        const response = await fetch('/api/admin/reports/monthly', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            month: parseInt(month),
-            year: parseInt(year),
-            sendEmail: true,
-            format: reportFormat,
-          }),
-        });
-
-        if (response.ok) {
-          toast({
-            title: "Sucesso",
-            description: "Relatório enviado por email!",
-          });
-        } else {
-          throw new Error('Erro ao enviar email');
-        }
-      } else {
-        // Download CSV
-        const response = await fetch('/api/admin/reports/monthly', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            month: parseInt(month),
-            year: parseInt(year),
-            sendEmail: false,
-            format: reportFormat,
-          }),
-        });
-
-        if (response.ok) {
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `relatorio-${month}-${year}.${reportFormat === 'pdf' ? 'pdf' : 'csv'}`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-
-          toast({
-            title: "Sucesso",
-            description: "Relatório baixado com sucesso!",
-          });
-        } else {
-          throw new Error('Erro ao gerar relatório');
-        }
-      }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao baixar relatório",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleDeleteRecords = async () => {
     try {
-      const response = await fetch('/api/admin/time-records/month', {
-        method: 'DELETE',
+      const response = await fetch('/api/admin/delete-records', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           month: deleteMonth,
           year: deleteYear,
-          userIds: selectedUsers.length > 0 ? selectedUsers : undefined
+          userIds: selectedUsers.length > 0 ? selectedUsers : undefined,
         }),
       });
 
@@ -207,9 +145,8 @@ export default function AdminDashboard() {
         const result = await response.json();
         toast({
           title: "Sucesso",
-          description: result.message || "Registros apagados com sucesso!",
+          description: `${result.deletedCount} registros foram apagados.`,
         });
-        setSelectedUsers([]);
       } else {
         throw new Error('Erro ao apagar registros');
       }
@@ -222,131 +159,96 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSaveReportEmail = async () => {
-    try {
-      await apiRequest('POST', '/api/admin/settings', {
-        key: 'report_email',
-        value: reportEmail,
-      });
-
-      toast({
-        title: "Sucesso",
-        description: "Email salvo com sucesso",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar email",
-        variant: "destructive",
-      });
-    }
-  };
+  if (statsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-pink-50 to-white">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--brand-light)' }}>
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="inline-block p-2 brand-gradient rounded-lg">
-                  <Home className="text-white h-5 w-5" />
-                </div>
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-3">
+              <div className="brand-gradient p-2 rounded-lg">
+                <Home className="h-6 w-6 text-white" />
               </div>
-              <div className="ml-4">
-                <h1 className="text-xl font-semibold text-gray-900">
-                  Clean My House - Painel Administrativo
-                </h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
+                <p className="text-sm text-gray-600">Clean My House - Sistema de Ponto</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {user?.firstName || user?.lastName ? 
-                  `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
-                  user?.email || 'Admin'
-                }
-              </span>
-              <Button variant="ghost" onClick={handleLogout} className="text-gray-400 hover:text-gray-600">
-                <LogOut className="h-4 w-4" />
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">
+                  {user?.firstName || user?.lastName ? 
+                    `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
+                    user?.email
+                  }
+                </p>
+                <p className="text-xs text-gray-500">Administrador</p>
+              </div>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                size="sm"
+                className="hover:bg-pink-50 hover:border-pink-300"
+              >
+                Sair
               </Button>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
-          <Card className="shadow-lg">
-            <CardContent className="p-3 sm:p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Users className="text-green-600 h-4 w-4 sm:h-6 sm:w-6" />
-                  </div>
-                </div>
-                <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">Funcionários Ativos</p>
-                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
-                    {statsLoading ? <LoadingSpinner size="sm" /> : stats?.activeEmployees || 0}
-                  </p>
-                </div>
-              </div>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Funcionários Ativos</CardTitle>
+              <UserCog className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold brand-text">{stats?.activeEmployees || 0}</div>
+              <p className="text-xs text-muted-foreground">Total de funcionários</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <LogIn className="text-blue-600 h-6 w-6" />
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Entradas Hoje</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {statsLoading ? <LoadingSpinner size="sm" /> : stats?.todayEntries || 0}
-                  </p>
-                </div>
-              </div>
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Entradas Hoje</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{stats?.todayEntries || 0}</div>
+              <p className="text-xs text-muted-foreground">Pontos de entrada</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                    <LogOut className="text-red-600 h-6 w-6" />
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Saídas Hoje</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {statsLoading ? <LoadingSpinner size="sm" /> : stats?.todayExits || 0}
-                  </p>
-                </div>
-              </div>
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Saídas Hoje</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{stats?.todayExits || 0}</div>
+              <p className="text-xs text-muted-foreground">Pontos de saída</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Clock className="text-yellow-600 h-6 w-6" />
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Em Expediente</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {statsLoading ? <LoadingSpinner size="sm" /> : stats?.currentlyWorking || 0}
-                  </p>
-                </div>
-              </div>
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Trabalhando Agora</CardTitle>
+              <Eye className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{stats?.currentlyWorking || 0}</div>
+              <p className="text-xs text-muted-foreground">Funcionários em serviço</p>
             </CardContent>
           </Card>
         </div>
@@ -385,103 +287,141 @@ export default function AdminDashboard() {
               </TabsContent>
 
               <TabsContent value="reports" className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Gerar Relatório Mensal</h3>
+                <div className="grid gap-6">
+                  {/* Seção de Gerar Relatório */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Gerar Relatório PDF
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex gap-4">
+                        <div className="flex-1">
+                          <Label htmlFor="reportMonth">Mês</Label>
+                          <Select value={reportMonth.toString()} onValueChange={(value) => setReportMonth(Number(value))}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({length: 12}, (_, i) => (
+                                <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                  {new Date(2023, i).toLocaleDateString('pt-BR', { month: 'long' })}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex-1">
+                          <Label htmlFor="reportYear">Ano</Label>
+                          <Select value={reportYear.toString()} onValueChange={(value) => setReportYear(Number(value))}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({length: 10}, (_, i) => (
+                                <SelectItem key={2020 + i} value={(2020 + i).toString()}>
+                                  {2020 + i}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
 
-                    <div>
-                      <Label htmlFor="reportMonth">Selecionar Mês</Label>
-                      <Select value={selectedReportMonth} onValueChange={setSelectedReportMonth}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o mês" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {generateMonthOptions().map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
+                      <Button 
+                        onClick={handleDownloadReport}
+                        className="brand-gradient brand-gradient-hover text-white w-full"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Baixar Relatório PDF
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Seção de Apagar Registros */}
+                  <Card className="border-red-200">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-red-700">
+                        <Trash2 className="h-5 w-5" />
+                        Apagar Registros
+                      </CardTitle>
+                      <p className="text-sm text-red-600">Atenção: Esta ação é permanente e não pode ser desfeita.</p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex gap-4">
+                        <div className="flex-1">
+                          <Label htmlFor="deleteMonth">Mês</Label>
+                          <Select value={deleteMonth.toString()} onValueChange={(value) => setDeleteMonth(Number(value))}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({length: 12}, (_, i) => (
+                                <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                  {new Date(2023, i).toLocaleDateString('pt-BR', { month: 'long' })}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex-1">
+                          <Label htmlFor="deleteYear">Ano</Label>
+                          <Select value={deleteYear.toString()} onValueChange={(value) => setDeleteYear(Number(value))}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({length: 10}, (_, i) => (
+                                <SelectItem key={2020 + i} value={(2020 + i).toString()}>
+                                  {2020 + i}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Funcionários (deixe vazio para todos)</Label>
+                        <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3">
+                          {users?.map((user) => (
+                            <div key={user.id} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`user-${user.id}`}
+                                checked={selectedUsers.includes(user.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedUsers([...selectedUsers, user.id]);
+                                  } else {
+                                    setSelectedUsers(selectedUsers.filter(id => id !== user.id));
+                                  }
+                                }}
+                                className="rounded border-gray-300"
+                              />
+                              <Label htmlFor={`user-${user.id}`} className="text-sm">
+                                {user.firstName || user.lastName ? 
+                                  `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
+                                  user.email
+                                }
+                              </Label>
+                            </div>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="reportFormat">Selecionar Formato</Label>
-                      <Select value={reportFormat} onValueChange={setReportFormat}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o formato" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="csv">CSV</SelectItem>
-                          <SelectItem value="pdf">PDF</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex space-x-3">
-                      <Button
-                        onClick={() => handleGenerateReport(false)}
-                        disabled={!selectedReportMonth}
-                        className="flex-1 brand-gradient brand-gradient-hover text-white"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Baixar {reportFormat.toUpperCase()}
-                      </Button>
-
-                      <Button
-                        onClick={() => handleGenerateReport(true)}
-                        disabled={!selectedReportMonth}
-                        variant="outline"
-                        className="flex-1"
-                        title="Certifique-se de que o email está configurado no servidor"
-                      >
-                        <Mail className="h-4 w-4 mr-2" />
-                        Enviar Email
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <Card className="bg-gray-50">
-                      <CardHeader>
-                        <CardTitle className="text-base">Informações do Relatório</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Formato:</span>
-                            <span className="font-medium">{reportFormat.toUpperCase()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Conteúdo:</span>
-                            <span className="font-medium">Todos os registros</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Inclui:</span>
-                            <span className="font-medium">Nome, data, horários, locais</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Ordenação:</span>
-                            <span className="font-medium">Por funcionário e data</span>
-                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
 
-                    <Card className="bg-yellow-50 border-yellow-200">
-                      <CardContent className="pt-4">
-                        <div className="flex items-start space-x-2">
-                          <Mail className="h-4 w-4 text-yellow-600 mt-0.5" />
-                          <div className="text-sm">
-                            <p className="font-medium text-yellow-800">Configuração de Email</p>
-                            <p className="text-yellow-700 mt-1">
-                              Para enviar relatórios por email, configure EMAIL_USER e EMAIL_PASS nas variáveis de ambiente do servidor.
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                      <Button 
+                        onClick={handleDeleteRecords}
+                        variant="destructive"
+                        className="w-full"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Apagar Registros
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
 
@@ -489,51 +429,62 @@ export default function AdminDashboard() {
                 <div className="space-y-6">
                   <Card className="bg-gray-50">
                     <CardHeader>
-                      <CardTitle className="text-base">E-mail para Relatórios</CardTitle>
+                      <CardTitle>Configurações do Sistema</CardTitle>
+                      <CardDescription>
+                        Configure as preferências do sistema de ponto eletrônico.
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <div className="flex space-x-4">
-                        <Input
-                          type="email"
-                          value={reportEmail || emailSetting || ''}
-                          onChange={(e) => setReportEmail(e.target.value)}
-                          placeholder="admin@cleanmyhouse.com"
-                          className="flex-1"
-                        />
-                        <Button 
-                          onClick={handleSaveReportEmail}
-                          className="brand-gradient brand-gradient-hover text-white"
-                        >
-                          Salvar
-                        </Button>
+                    <CardContent className="space-y-4">
+                      <div className="grid gap-4">
+                        <div>
+                          <Label htmlFor="reportEmail">Email para Relatórios</Label>
+                          <div className="flex gap-2 mt-1">
+                            <input
+                              id="reportEmail"
+                              type="email"
+                              value={reportEmail}
+                              onChange={(e) => setReportEmail(e.target.value)}
+                              placeholder="email@empresa.com"
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            />
+                            <Button 
+                              onClick={async () => {
+                                try {
+                                  await apiRequest('POST', '/api/admin/settings', {
+                                    key: 'report_email',
+                                    value: reportEmail
+                                  });
+                                  toast({
+                                    title: "Sucesso",
+                                    description: "Email configurado com sucesso",
+                                  });
+                                } catch (error) {
+                                  toast({
+                                    title: "Erro",
+                                    description: "Erro ao salvar configuração",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                              className="brand-gradient brand-gradient-hover text-white"
+                            >
+                              Salvar
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Os relatórios mensais serão enviados para este endereço automaticamente.
-                      </p>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-gray-50">
-                    <CardHeader>
-                      <CardTitle className="text-base">Informações do Sistema</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Sistema:</span>
-                          <span className="font-medium">Clean My House v1.0</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Geolocalização:</span>
-                          <Badge variant="default">Ativa</Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Registros em tempo real:</span>
-                          <Badge variant="default">Ativo</Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Backup automático:</span>
-                          <Badge variant="default">Ativo</Badge>
+                  <Card className="bg-yellow-50 border-yellow-200">
+                    <CardContent className="pt-4">
+                      <div className="flex items-start space-x-2">
+                        <Mail className="h-4 w-4 text-yellow-600 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-yellow-800">Configuração de Email</p>
+                          <p className="text-yellow-700 mt-1">
+                            Para enviar relatórios por email, configure EMAIL_USER e EMAIL_PASS nas variáveis de ambiente do servidor.
+                          </p>
                         </div>
                       </div>
                     </CardContent>
