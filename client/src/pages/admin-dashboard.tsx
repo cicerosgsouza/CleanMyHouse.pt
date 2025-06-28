@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -72,6 +72,9 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/settings/report_email'],
     select: (data: any) => data?.value || '',
   });
+
+  // Usar o valor da configuração se estiver disponível, senão usar o estado local
+  const currentEmail = emailSetting || reportEmail;
 
   const { data: users } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
@@ -473,7 +476,7 @@ export default function AdminDashboard() {
                             <input
                               id="reportEmail"
                               type="email"
-                              value={reportEmail}
+                              value={currentEmail}
                               onChange={(e) => setReportEmail(e.target.value)}
                               placeholder="email@empresa.com"
                               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
