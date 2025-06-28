@@ -265,25 +265,38 @@ startxref
   }
 
   private calculateTotalHours(records: ReportData[]): string {
-    let totalMinutes = 0;
+    let totalHours = 0;
+    
+    console.log('=== CALCULANDO TOTAL WORKING-PDF-GENERATOR ===');
+    console.log('Registros recebidos:', records.length);
     
     records.forEach(record => {
-      if (record.horasTrabalhadas && record.horasTrabalhadas !== '0:00' && record.horasTrabalhadas !== '0') {
-        const parts = record.horasTrabalhadas.split(':');
-        if (parts.length === 2) {
-          const hours = parseInt(parts[0]) || 0;
-          const minutes = parseInt(parts[1]) || 0;
-          if (hours >= 0 && minutes >= 0) {
-            totalMinutes += hours * 60 + minutes;
-          }
+      console.log(`Processando: ${record.funcionario} - Horas: "${record.horasTrabalhadas}"`);
+      
+      if (record.horasTrabalhadas && record.horasTrabalhadas !== '') {
+        // Remove 'h' e converte para decimal
+        const timeString = record.horasTrabalhadas.replace('h', '');
+        const hoursDecimal = parseFloat(timeString);
+        
+        if (!isNaN(hoursDecimal) && hoursDecimal > 0) {
+          totalHours += hoursDecimal;
+          console.log(`✓ Adicionado: ${hoursDecimal}h. Total acumulado: ${totalHours}h`);
+        } else {
+          console.log(`✗ Ignorado (não é número válido): "${timeString}"`);
         }
+      } else {
+        console.log(`✗ Ignorado (vazio ou nulo)`);
       }
     });
     
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
+    // Converte para formato horas:minutos
+    const hours = Math.floor(totalHours);
+    const minutes = Math.round((totalHours - hours) * 60);
+    const result = `${hours}:${minutes.toString().padStart(2, '0')}h`;
     
-    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+    console.log(`=== RESULTADO FINAL: ${result} (${totalHours} horas decimais) ===`);
+    
+    return result;
   }
 
   private truncateLocation(location: string): string {
