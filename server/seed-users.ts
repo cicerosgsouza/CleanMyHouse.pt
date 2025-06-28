@@ -62,7 +62,13 @@ async function seedUsers() {
 
 // Execute se chamado diretamente
 if (import.meta.url === `file://${process.argv[1]}`) {
-  seedUsers().then(() => process.exit(0));
+  seedUsers().then(() => {
+    console.log("Seeding completed");
+    process.exit(0);
+  }).catch((error) => {
+    console.error("Seeding failed:", error);
+    process.exit(1);
+  });
 }
 
 export { seedUsers };

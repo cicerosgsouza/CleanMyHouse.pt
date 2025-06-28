@@ -84,6 +84,9 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **June 28, 2025**: Fixed deployment issues - proper server startup with error handling
+- **June 28, 2025**: Added health check endpoint at `/` for deployment monitoring
+- **June 28, 2025**: Fixed seed-users function to not exit process after completion
 - **June 28, 2025**: Limpeza completa do banco de dados - removidos todos os usuários de teste inativos
 - **June 28, 2025**: Funcionalidade de exclusão alterada para remoção permanente (não apenas desativação)
 - **June 28, 2025**: Melhorado tratamento de erro para criação de usuários com detecção de emails duplicados
