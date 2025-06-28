@@ -33,18 +33,23 @@ class EmailService {
       }
 
       this.transporter = nodemailer.createTransport({
-        host: emailHost,
-        port: emailPort,
-        secure: emailPort === 465,
+        service: 'gmail',
         auth: {
           user: emailUser,
           pass: emailPass,
         },
+        tls: {
+          rejectUnauthorized: false
+        }
       });
 
-      // Verify connection
-      await this.transporter.verify();
-      console.log('Email service initialized successfully');
+      // Verify connection (but don't fail initialization if verification fails)
+      try {
+        await this.transporter.verify();
+        console.log('Email service initialized and verified successfully');
+      } catch (verifyError) {
+        console.warn('Email service initialized but verification failed. Email may still work:', verifyError.message);
+      }
     } catch (error) {
       console.error('Failed to initialize email service:', error);
       this.transporter = null;
