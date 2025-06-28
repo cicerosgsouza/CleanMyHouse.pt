@@ -10,7 +10,7 @@ interface RecentRecord extends TimeRecord {
 }
 
 export function RealTimeFeed() {
-  const { data: records = [], isLoading } = useQuery<RecentRecord[]>({
+  const { data: records, isLoading } = useQuery<RecentRecord[]>({
     queryKey: ['/api/admin/recent-records'],
     refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
   });
@@ -49,7 +49,7 @@ export function RealTimeFeed() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {!records || records.length === 0 ? (
+        {!records || !Array.isArray(records) || records.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p>Nenhuma atividade recente</p>
@@ -106,7 +106,7 @@ export function RealTimeFeed() {
                       })}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {formatTimeAgo(record.timestamp)}
+                      {formatTimeAgo(record.timestamp.toString())}
                     </p>
                   </div>
                 </div>

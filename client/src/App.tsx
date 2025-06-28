@@ -37,7 +37,7 @@ function Router() {
   }
 
   // Check if user needs to change default credentials
-  const needsCredentialChange = user && 'isDefaultCredentials' in user && user.isDefaultCredentials;
+  const needsCredentialChange = user && typeof user === 'object' && user !== null && 'isDefaultCredentials' in user && (user as any).isDefaultCredentials;
   
   if (needsCredentialChange) {
     return (

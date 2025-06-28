@@ -188,7 +188,7 @@ export default function AdminDashboard() {
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">
                   {user?.firstName || user?.lastName ? 
-                    `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
+                    `${user?.firstName || ''} ${user?.lastName || ''}`.trim() : 
                     user?.email
                   }
                 </p>

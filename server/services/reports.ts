@@ -28,8 +28,8 @@ export class ReportsService {
     
     if (userId) {
       console.log(`Buscando registros do usuário ${userId}...`);
-      const userRecords = await storage.getUserTimeRecords(userId, startDate, endDate);
-      const user = await storage.getUser(userId);
+      const userRecords = await storage.getUserTimeRecords(Number(userId), startDate, endDate);
+      const user = await storage.getUser(Number(userId));
       if (!user) {
         throw new Error(`Usuário com ID ${userId} não encontrado`);
       }
@@ -153,7 +153,7 @@ export class ReportsService {
       'Status'
     ];
 
-    const csvRows = [];
+    const csvRows: string[] = [];
     // Add BOM for proper Excel encoding
     csvRows.push('\uFEFF' + headers.join(';'));
 
