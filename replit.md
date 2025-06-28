@@ -84,9 +84,11 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **June 28, 2025**: Limpeza completa do banco de dados - removidos todos os usuários de teste inativos
+- **June 28, 2025**: Funcionalidade de exclusão alterada para remoção permanente (não apenas desativação)
+- **June 28, 2025**: Melhorado tratamento de erro para criação de usuários com detecção de emails duplicados
 - **June 28, 2025**: Corrigido campo de email nas configurações - agora permite edição completa e persiste valor
-- **June 28, 2025**: Corrigida rota de deletar registros (mudança de POST para DELETE) 
-- **June 28, 2025**: Removidos definitivamente usuários de teste funcionario1@cleanmyhouse.com e funcionario2@cleanmyhouse.com
+- **June 28, 2025**: Corrigida rota de deletar registros (mudança de POST para DELETE)
 - **June 28, 2025**: Revisão completa do código - removidos 86 console.log para otimizar performance
 - **June 28, 2025**: Corrigida tipagem TypeScript - removido uso de `any` no App.tsx
 - **June 28, 2025**: Melhorado error handling em routes.ts com tipagem adequada
