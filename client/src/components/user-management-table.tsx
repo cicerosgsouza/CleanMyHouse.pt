@@ -52,10 +52,22 @@ export function UserManagementTable() {
         description: "Usuário criado com sucesso",
       });
     },
-    onError: (error) => {
+    onError: async (error: any) => {
+      let errorMessage = "Erro ao criar usuário";
+      
+      try {
+        if (error?.message?.includes('400:')) {
+          const responseText = error.message.split('400: ')[1];
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.message || errorMessage;
+        }
+      } catch {
+        // Use default message if parsing fails
+      }
+      
       toast({
         title: "Erro",
-        description: "Erro ao criar usuário",
+        description: errorMessage,
         variant: "destructive",
       });
     },

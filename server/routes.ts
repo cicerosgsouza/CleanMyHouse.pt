@@ -198,9 +198,20 @@ export function registerRoutes(app: Express): Server {
       });
 
       res.json({ ...newUser, password: undefined });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating user:", error);
-      res.status(400).json({ message: "Erro ao criar usuário" });
+      
+      // Check for duplicate email error
+      if (error?.code === '23505' && error?.constraint === 'users_email_key') {
+        return res.status(400).json({ message: "Este email já está em uso. Por favor, use um email diferente." });
+      }
+      
+      // Check for other validation errors
+      if (error?.message?.includes('validation')) {
+        return res.status(400).json({ message: "Dados inválidos. Verifique os campos obrigatórios." });
+      }
+      
+      res.status(400).json({ message: "Erro ao criar usuário. Tente novamente." });
     }
   });
 
