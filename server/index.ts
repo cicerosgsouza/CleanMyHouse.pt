@@ -53,23 +53,26 @@ async function startServer() {
       });
     });
 
-    // Root endpoint for deployment health checks
-    app.get('/', (req, res) => {
-      res.status(200).json({ 
-        status: 'ok', 
-        message: 'Clean My House - Time Tracking System',
-        timestamp: new Date().toISOString()
-      });
-    });
-
-    // Setup static serving based on environment
+    // Setup static serving based on environment FIRST
     if (process.env.NODE_ENV === "development") {
       await setupVite(app, server);
     } else {
       try {
         serveStatic(app);
       } catch (error) {
-        console.warn("Static files not available, continuing with API only");
+        console.warn("Static files not available, serving SPA fallback");
+        // Fallback SPA routing for production
+        app.get('*', (req, res) => {
+          if (req.path.startsWith('/api/')) {
+            return; // Let API routes handle themselves
+          }
+          res.status(200).json({ 
+            status: 'ok', 
+            message: 'Clean My House - Time Tracking System',
+            timestamp: new Date().toISOString(),
+            note: 'Frontend not available, use API endpoints'
+          });
+        });
       }
     }
 
@@ -84,7 +87,7 @@ async function startServer() {
     const port = parseInt(process.env.PORT || "5000", 10);
     const host = "0.0.0.0";
     
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       server.listen(port, host, () => {
         log(`Server running on ${host}:${port} in ${process.env.NODE_ENV || 'production'} mode`);
         
@@ -93,27 +96,33 @@ async function startServer() {
         console.log('- PORT:', process.env.PORT);
         console.log('- DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
 
-        // Non-blocking seeding
-        setImmediate(async () => {
-          try {
-            const { seedUsers } = await import('./seed-users');
-            await seedUsers();
-            log("User seeding completed successfully");
-          } catch (error) {
-            console.error("Error seeding users:", error);
-          }
-        });
+        // Seeding disabled - users managed through admin interface only
+        log("User seeding disabled - no automatic test users created");
         
         log("Server initialization complete - ready to accept connections");
         resolve(server);
       });
 
       server.on('error', (error: any) => {
-        console.error('Server error:', error);
-        if (error.code === 'EADDRINUSE') {
-          console.log(`Port ${port} is in use, exiting...`);
-          process.exit(1);
-        }
+        console.error('Server startup error:', error);
+        reject(error);
+      });
+      
+      // Handle process signals for graceful shutdown
+      process.on('SIGTERM', () => {
+        log('SIGTERM received, shutting down gracefully');
+        server.close(() => {
+          log('Server closed');
+          process.exit(0);
+        });
+      });
+      
+      process.on('SIGINT', () => {
+        log('SIGINT received, shutting down gracefully');
+        server.close(() => {
+          log('Server closed');
+          process.exit(0);
+        });
       });
     });
 
