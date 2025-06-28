@@ -250,6 +250,60 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Employee report request route
+  app.post('/api/employee/request-report', isAuthenticated, async (req: any, res) => {
+    console.log('Funcionário solicitando relatório...');
+    
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: "Não autorizado" });
+      }
+
+      const { month, year } = req.body;
+      console.log(`Parâmetros recebidos: mês=${month}, ano=${year}, usuário=${user.id}`);
+
+      if (!month || !year) {
+        return res.status(400).json({ message: "Mês e ano são obrigatórios" });
+      }
+
+      // Buscar email de destino configurado pelo admin
+      const reportEmailSetting = await storage.getSetting('report_email');
+      const reportEmail = reportEmailSetting?.value;
+
+      if (!reportEmail) {
+        console.error('Email de destino não configurado pelo administrador');
+        return res.status(500).json({ message: "Email de destino não configurado. Entre em contato com o administrador." });
+      }
+
+      console.log('Gerando relatório individual...');
+      const reportBuffer = await reportsService.generateMonthlyReport(Number(month), Number(year), user.id.toString(), 'pdf');
+      console.log(`Relatório gerado com sucesso. Tamanho: ${reportBuffer.length} bytes`);
+
+      console.log('Enviando relatório por email...');
+      const monthName = new Date(Number(year), Number(month) - 1).toLocaleDateString('pt-BR', { 
+        month: 'long', 
+        year: 'numeric' 
+      });
+
+      const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+      const emailSent = await emailService.sendReportEmail(reportEmail, reportBuffer, `${monthName} - ${userName}`, 'pdf');
+
+      if (emailSent) {
+        console.log('Email enviado com sucesso');
+        res.json({ message: "Relatório enviado por email com sucesso" });
+      } else {
+        console.error('Falha ao enviar email');
+        res.status(500).json({ message: "Erro ao enviar email. Verifique as configurações." });
+      }
+      
+    } catch (error: unknown) {
+      const errorObj = error as Error;
+      console.error('Erro ao gerar relatório individual:', errorObj.message);
+      res.status(500).json({ message: "Erro ao gerar relatório. Tente novamente." });
+    }
+  });
+
   // Reports routes
   app.post('/api/admin/reports/monthly', isAuthenticated, async (req: any, res) => {
     console.log('Iniciando geração de relatório...');

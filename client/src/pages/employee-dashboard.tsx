@@ -107,20 +107,19 @@ export default function EmployeeDashboard() {
       if (!selectedMonth) throw new Error('Mês não selecionado');
       
       const [month, year] = selectedMonth.split('-');
-      const response = await fetch('/api/admin/reports/monthly', {
+      const response = await fetch('/api/employee/request-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           month: parseInt(month),
           year: parseInt(year),
-          userId: user?.id,
-          sendEmail: true,
         }),
       });
       
       if (!response.ok) {
-        throw new Error('Erro ao gerar relatório');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao gerar relatório');
       }
       
       return response.json();
