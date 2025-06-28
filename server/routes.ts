@@ -253,8 +253,8 @@ export function registerRoutes(app: Express): Server {
       }
 
       const { id } = req.params;
-      await storage.deactivateUser(parseInt(id));
-      res.json({ message: "Usuário desativado com sucesso" });
+      await storage.deleteUserPermanently(parseInt(id));
+      res.json({ message: "Usuário excluído com sucesso" });
     } catch (error) {
       console.error("Error deactivating user:", error);
       res.status(400).json({ message: "Erro ao desativar usuário" });

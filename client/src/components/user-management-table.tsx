@@ -104,7 +104,7 @@ export function UserManagementTable() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({
         title: "Sucesso",
-        description: "Usuário desativado com sucesso",
+        description: "Usuário excluído com sucesso",
       });
     },
     onError: () => {
@@ -144,16 +144,16 @@ export function UserManagementTable() {
       // Para edição, só inclui a senha se foi fornecida
       const updateData = { ...formData };
       if (!updateData.password) {
-        delete updateData.password;
+        delete (updateData as any).password;
       }
-      updateUserMutation.mutate({ id: editingUser.id, userData: updateData });
+      updateUserMutation.mutate({ id: editingUser.id.toString(), userData: updateData });
     } else {
       createUserMutation.mutate(formData);
     }
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja desativar este usuário?')) {
+    if (confirm('Tem certeza que deseja excluir permanentemente este usuário? Esta ação não pode ser desfeita.')) {
       deleteUserMutation.mutate(id);
     }
   };
@@ -319,7 +319,7 @@ export function UserManagementTable() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleDelete(user.id)}
+                      onClick={() => handleDelete(user.id.toString())}
                       className="text-red-600 hover:text-red-800"
                       disabled={deleteUserMutation.isPending}
                     >
