@@ -116,7 +116,16 @@ export class ReportsService {
           if (entry && exit) {
             const diffMs = exit.timestamp.getTime() - entry.timestamp.getTime();
             const diffHours = diffMs / (1000 * 60 * 60);
-            horasTrabalhadas = `${diffHours.toFixed(2)}h`;
+            
+            console.log(`Calculando horas entre ${entry.timestamp.toISOString()} e ${exit.timestamp.toISOString()}`);
+            console.log(`Diferença: ${diffMs}ms = ${diffHours} horas`);
+            
+            if (diffHours > 0) {
+              horasTrabalhadas = `${diffHours.toFixed(2)}h`;
+              console.log(`Resultado: ${horasTrabalhadas}`);
+            } else {
+              console.log('Diferença negativa ou zero, não contabilizando');
+            }
           }
 
           const status = entry && exit ? 'Completo' : 
