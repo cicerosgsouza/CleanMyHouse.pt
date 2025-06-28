@@ -49,7 +49,7 @@ export function RealTimeFeed() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {records.length === 0 ? (
+        {!records || records.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p>Nenhuma atividade recente</p>

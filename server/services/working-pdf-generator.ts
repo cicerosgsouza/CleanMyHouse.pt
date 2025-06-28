@@ -267,25 +267,15 @@ startxref
   private calculateTotalHours(records: ReportData[]): string {
     let totalHours = 0;
     
-    console.log('=== CALCULANDO TOTAL WORKING-PDF-GENERATOR ===');
-    console.log('Registros recebidos:', records.length);
-    
     records.forEach(record => {
-      console.log(`Processando: ${record.funcionario} - Horas: "${record.horasTrabalhadas}"`);
-      
       if (record.horasTrabalhadas && record.horasTrabalhadas !== '') {
         // Remove 'h' e converte para decimal
         const timeString = record.horasTrabalhadas.replace('h', '');
         const hoursDecimal = parseFloat(timeString);
         
-        if (!isNaN(hoursDecimal) && hoursDecimal > 0) {
+        if (!isNaN(hoursDecimal) && hoursDecimal >= 0) {
           totalHours += hoursDecimal;
-          console.log(`✓ Adicionado: ${hoursDecimal}h. Total acumulado: ${totalHours}h`);
-        } else {
-          console.log(`✗ Ignorado (não é número válido): "${timeString}"`);
         }
-      } else {
-        console.log(`✗ Ignorado (vazio ou nulo)`);
       }
     });
     
@@ -293,8 +283,6 @@ startxref
     const hours = Math.floor(totalHours);
     const minutes = Math.round((totalHours - hours) * 60);
     const result = `${hours}:${minutes.toString().padStart(2, '0')}h`;
-    
-    console.log(`=== RESULTADO FINAL: ${result} (${totalHours} horas decimais) ===`);
     
     return result;
   }

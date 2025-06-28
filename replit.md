@@ -84,15 +84,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **June 28, 2025**: Revisão completa do código - removidos 86 console.log para otimizar performance
+- **June 28, 2025**: Corrigida tipagem TypeScript - removido uso de `any` no App.tsx
+- **June 28, 2025**: Melhorado error handling em routes.ts com tipagem adequada
+- **June 28, 2025**: Adicionadas verificações de nulo para prevenir crashes
+- **June 28, 2025**: Cálculo de horas totais no PDF corrigido definitivamente
 - **June 27, 2025**: Sistema de autenticação migrado de Replit Auth para login local com email/senha
 - **June 27, 2025**: Implementado sistema de mudança obrigatória de credenciais padrão no primeiro login
-- **June 27, 2025**: Criados usuários de teste:
-  - Admin: admin@cleanmyhouse.com / admin123
-  - Funcionários: funcionario1@cleanmyhouse.com / 123456, funcionario2@cleanmyhouse.com / 123456
-- **June 27, 2025**: Adicionada tela de alteração de credenciais com validação de segurança
-- **June 27, 2025**: Sistema de hash de senha implementado com salt para segurança
-- **June 27, 2025**: Implementado gerador de PDF funcional usando jsPDF para relatórios reais
-- **June 27, 2025**: Sistema de relatórios agora gera PDFs válidos que abrem corretamente
+- **June 27, 2025**: Sistema de relatórios implementado com geração de PDF funcional usando jsPDF
 
 ## Changelog
 

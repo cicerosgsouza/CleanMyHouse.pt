@@ -303,21 +303,18 @@ export function registerRoutes(app: Express): Server {
         res.send(reportBuffer);
         console.log('Arquivo enviado para download');
       }
-    } catch (error) {
-      console.error('Erro detalhado ao gerar relatório:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+    } catch (error: unknown) {
+      const errorObj = error as Error;
+      console.error('Erro ao gerar relatório:', errorObj.message);
       
-      const { sendEmail, format } = req.body;
+      const { sendEmail } = req.body;
       let errorMessage = 'Erro interno do servidor ao gerar relatório';
       
-      if (error.message?.includes('PDF')) {
+      if (errorObj.message?.includes('PDF')) {
         errorMessage = 'Erro ao gerar PDF. Verifique as dependências do sistema.';
-      } else if (error.message?.includes('timeout')) {
+      } else if (errorObj.message?.includes('timeout')) {
         errorMessage = 'Timeout ao gerar relatório. Tente novamente.';
-      } else if (error.message?.includes('launch')) {
+      } else if (errorObj.message?.includes('launch')) {
         errorMessage = 'Erro ao inicializar o gerador de PDF. Verifique as dependências.';
       }
       

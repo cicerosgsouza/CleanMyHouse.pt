@@ -69,7 +69,7 @@ export default function AdminDashboard() {
 
   const { data: emailSetting } = useQuery({
     queryKey: ['/api/admin/settings/report_email'],
-    select: (data) => data?.value || '',
+    select: (data: any) => data?.value || '',
   });
 
   const { data: users } = useQuery<User[]>({

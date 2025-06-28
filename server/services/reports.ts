@@ -30,7 +30,10 @@ export class ReportsService {
       console.log(`Buscando registros do usuário ${userId}...`);
       const userRecords = await storage.getUserTimeRecords(userId, startDate, endDate);
       const user = await storage.getUser(userId);
-      records = userRecords.map(record => ({ ...record, user: user! }));
+      if (!user) {
+        throw new Error(`Usuário com ID ${userId} não encontrado`);
+      }
+      records = userRecords.map(record => ({ ...record, user }));
       console.log(`Encontrados ${userRecords.length} registros para o usuário`);
     } else {
       console.log('Buscando todos os registros...');
@@ -65,8 +68,6 @@ export class ReportsService {
   }
 
   private groupRecordsByUserAndDate(records: (TimeRecord & { user: User })[]): ReportData[] {
-    console.log('Agrupando', records.length, 'registros por usuário e data');
-    
     const grouped = new Map<string, Map<string, { entries: TimeRecord[], exits: TimeRecord[] }>>();
 
     // Group by user and date
@@ -75,8 +76,6 @@ export class ReportsService {
       const userName = `${record.user.firstName || ''} ${record.user.lastName || ''}`.trim() || record.user.email || 'Usuário Desconhecido';
       const date = record.timestamp.toISOString().split('T')[0];
       const key = `${userId}-${userName}`;
-
-      console.log('Processando registro:', userName, record.type, 'data:', date);
 
       if (!grouped.has(key)) {
         grouped.set(key, new Map());
@@ -117,14 +116,8 @@ export class ReportsService {
             const diffMs = exit.timestamp.getTime() - entry.timestamp.getTime();
             const diffHours = diffMs / (1000 * 60 * 60);
             
-            console.log(`Calculando horas entre ${entry.timestamp.toISOString()} e ${exit.timestamp.toISOString()}`);
-            console.log(`Diferença: ${diffMs}ms = ${diffHours} horas`);
-            
             if (diffHours > 0) {
               horasTrabalhadas = `${diffHours.toFixed(2)}h`;
-              console.log(`Resultado: ${horasTrabalhadas}`);
-            } else {
-              console.log('Diferença negativa ou zero, não contabilizando');
             }
           }
 
