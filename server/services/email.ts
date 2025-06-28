@@ -95,11 +95,11 @@ class EmailService {
     
     return this.sendEmail({
       to,
-      subject: `Clean‌My‌House - Relatório Mensal de Ponto (${month})`,
+      subject: `[Clean My House] - Relatório Mensal de Ponto (${month})`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;" translate="no">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;" translate="no" lang="pt">
           <div style="background: linear-gradient(135deg, #EC4899, #D946EF); padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;" translate="no">Clean‌My‌House</h1>
+            <h1 style="color: white; margin: 0;" translate="no" class="notranslate">&#67;&#108;&#101;&#97;&#110; &#77;&#121; &#72;&#111;&#117;&#115;&#101;</h1>
             <p style="color: white; margin: 10px 0 0 0;">Sistema de Registro de Ponto</p>
           </div>
           
