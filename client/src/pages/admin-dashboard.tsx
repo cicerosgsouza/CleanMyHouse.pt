@@ -32,7 +32,8 @@ import {
   Download,
   Mail,
   FileText,
-  Trash2
+  Trash2,
+  UserX
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { RealTimeFeed } from "@/components/real-time-feed";
@@ -132,8 +133,8 @@ export default function AdminDashboard() {
 
   const handleDeleteRecords = async () => {
     try {
-      const response = await fetch('/api/admin/delete-records', {
-        method: 'POST',
+      const response = await fetch('/api/admin/time-records/month', {
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
@@ -156,6 +157,34 @@ export default function AdminDashboard() {
       toast({
         title: "Erro",
         description: "Erro ao apagar registros",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCleanTestUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/clean-test-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Sucesso",
+          description: `${result.deletedCount} usuário(s) de teste excluído(s) permanentemente.`,
+        });
+        // Refresh the users list
+        window.location.reload();
+      } else {
+        throw new Error('Erro ao excluir usuários de teste');
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir usuários de teste",
         variant: "destructive",
       });
     }

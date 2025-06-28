@@ -29,6 +29,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateUser(id: number, updates: Partial<User>): Promise<User>;
   deactivateUser(id: number): Promise<void>;
+  deleteUserPermanently(id: number): Promise<void>;
   
   // Settings operations
   getSetting(key: string): Promise<Setting | undefined>;
@@ -180,6 +181,14 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(users.id, id));
+  }
+
+  async deleteUserPermanently(id: number): Promise<void> {
+    // First delete all time records for this user
+    await db.delete(timeRecords).where(eq(timeRecords.userId, id));
+    
+    // Then delete the user
+    await db.delete(users).where(eq(users.id, id));
   }
 
   // Settings operations

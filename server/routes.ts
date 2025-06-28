@@ -250,6 +250,57 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Permanent user deletion route
+  app.delete('/api/admin/users/:id/permanent', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const { id } = req.params;
+      await storage.deleteUserPermanently(parseInt(id));
+      res.json({ message: "Usuário excluído permanentemente" });
+    } catch (error) {
+      console.error("Error permanently deleting user:", error);
+      res.status(400).json({ message: "Erro ao excluir usuário permanentemente" });
+    }
+  });
+
+  // Clean test users route
+  app.post('/api/admin/clean-test-users', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      // Find and delete test users
+      const testEmails = [
+        'funcionario1@cleanmyhouse.com',
+        'funcionario2@cleanmyhouse.com'
+      ];
+
+      let deletedCount = 0;
+      for (const email of testEmails) {
+        const testUser = await storage.getUserByEmail(email);
+        if (testUser) {
+          await storage.deleteUserPermanently(testUser.id);
+          deletedCount++;
+          console.log(`Usuário de teste excluído: ${email}`);
+        }
+      }
+
+      res.json({ 
+        message: `${deletedCount} usuário(s) de teste excluído(s) permanentemente`,
+        deletedCount 
+      });
+    } catch (error) {
+      console.error("Error cleaning test users:", error);
+      res.status(500).json({ message: "Erro ao excluir usuários de teste" });
+    }
+  });
+
   // Employee report request route
   app.post('/api/employee/request-report', isAuthenticated, async (req: any, res) => {
     console.log('Funcionário solicitando relatório...');
