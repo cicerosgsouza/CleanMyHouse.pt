@@ -89,7 +89,8 @@ Preferred communication style: Simple, everyday language.
 - **June 28, 2025**: Added health check endpoint at `/health` for deployment monitoring
 - **June 28, 2025**: Fixed server startup with proper environment detection and fallbacks
 - **June 28, 2025**: Enhanced error handling for production deployment scenarios
-- **June 28, 2025**: Fixed seed-users function to not exit process after completion
+- **June 28, 2025**: Fixed seed-users function to prevent test users reappearing on restart
+- **June 28, 2025**: Improved seeding logic with smart detection and admin-only initial setup
 - **June 28, 2025**: Limpeza completa do banco de dados - removidos todos os usuários de teste inativos
 - **June 28, 2025**: Funcionalidade de exclusão alterada para remoção permanente (não apenas desativação)
 - **June 28, 2025**: Melhorado tratamento de erro para criação de usuários com detecção de emails duplicados
