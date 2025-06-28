@@ -65,6 +65,8 @@ export class ReportsService {
   }
 
   private groupRecordsByUserAndDate(records: (TimeRecord & { user: User })[]): ReportData[] {
+    console.log('Agrupando', records.length, 'registros por usuário e data');
+    
     const grouped = new Map<string, Map<string, { entries: TimeRecord[], exits: TimeRecord[] }>>();
 
     // Group by user and date
@@ -73,6 +75,8 @@ export class ReportsService {
       const userName = `${record.user.firstName || ''} ${record.user.lastName || ''}`.trim() || record.user.email || 'Usuário Desconhecido';
       const date = record.timestamp.toISOString().split('T')[0];
       const key = `${userId}-${userName}`;
+
+      console.log('Processando registro:', userName, record.type, 'data:', date);
 
       if (!grouped.has(key)) {
         grouped.set(key, new Map());
