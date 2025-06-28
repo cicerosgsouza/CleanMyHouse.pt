@@ -73,8 +73,12 @@ export default function AdminDashboard() {
     select: (data: any) => data?.value || '',
   });
 
-  // Usar o valor da configuração se estiver disponível, senão usar o estado local
-  const currentEmail = emailSetting || reportEmail;
+  // Sincronizar o estado local com o valor da configuração quando carregado
+  useEffect(() => {
+    if (emailSetting && !reportEmail) {
+      setReportEmail(emailSetting);
+    }
+  }, [emailSetting, reportEmail]);
 
   const { data: users } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
@@ -476,7 +480,7 @@ export default function AdminDashboard() {
                             <input
                               id="reportEmail"
                               type="email"
-                              value={currentEmail}
+                              value={reportEmail}
                               onChange={(e) => setReportEmail(e.target.value)}
                               placeholder="email@empresa.com"
                               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
