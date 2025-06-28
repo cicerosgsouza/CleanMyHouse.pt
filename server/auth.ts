@@ -24,39 +24,23 @@ async function hashPassword(password: string): Promise<string> {
 
 async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
   try {
-    console.log('Comparing passwords:');
-    console.log('- Supplied password length:', supplied?.length || 0);
-    console.log('- Stored password length:', stored?.length || 0);
-    console.log('- Stored password format:', stored?.substring(0, 20) + '...');
-    
     if (!stored || !stored.includes('.')) {
-      console.log('Invalid password format in database - missing salt separator');
       return false;
     }
     
     const [hashed, salt] = stored.split(".");
-    console.log('- Hash length:', hashed?.length || 0);
-    console.log('- Salt length:', salt?.length || 0);
-    
     if (!hashed || !salt) {
-      console.log('Invalid password format - missing hash or salt');
       return false;
     }
     
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
     
-    console.log('- Stored buffer length:', hashedBuf.length);
-    console.log('- Supplied buffer length:', suppliedBuf.length);
-    
     if (hashedBuf.length !== suppliedBuf.length) {
-      console.log(`Buffer length mismatch: stored=${hashedBuf.length}, supplied=${suppliedBuf.length}`);
       return false;
     }
     
-    const isMatch = timingSafeEqual(hashedBuf, suppliedBuf);
-    console.log('- Password match result:', isMatch);
-    return isMatch;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
     console.error('Password comparison error:', error);
     return false;
@@ -92,21 +76,15 @@ export function setupAuth(app: Express) {
       { usernameField: 'email' },
       async (email, password, done) => {
         try {
-          console.log('Login attempt for:', email);
           const user = await storage.getUserByEmail(email);
-          console.log('User found:', !!user);
           
           if (!user) {
-            console.log('User not found');
             return done(null, false);
           }
           
-          console.log('Stored password format:', user.password ? `${user.password.length} chars, has dot: ${user.password.includes('.')}` : 'empty');
           const passwordMatch = await comparePasswords(password, user.password);
-          console.log('Password match:', passwordMatch);
           
           if (!passwordMatch) {
-            console.log('Password does not match');
             return done(null, false);
           }
           
@@ -123,9 +101,13 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
+      if (!user) {
+        return done(null, false);
+      }
       done(null, user);
     } catch (error) {
-      done(error);
+      console.error('Session deserialize error:', error);
+      done(null, false);
     }
   });
 
@@ -157,17 +139,12 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    console.log('Login request received:', { email: req.body.email });
-    
     passport.authenticate("local", (err: any, user: User | false) => {
-      console.log('Auth callback - err:', !!err, 'user:', !!user);
-      
       if (err) {
         console.error('Authentication error:', err);
         return res.status(500).json({ message: "Erro interno do servidor" });
       }
       if (!user) {
-        console.log('Authentication failed - user not found or wrong password');
         return res.status(401).json({ message: "Email ou senha incorretos" });
       }
       
@@ -176,7 +153,6 @@ export function setupAuth(app: Express) {
           console.error('Login error:', err);
           return next(err);
         }
-        console.log('Login successful for user:', user.email);
         res.status(200).json({ ...user, password: undefined });
       });
     })(req, res, next);
@@ -185,14 +161,25 @@ export function setupAuth(app: Express) {
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
-      res.status(200).json({ message: "Logout realizado com sucesso" });
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Session destroy error:', err);
+          return res.status(500).json({ message: "Erro ao fazer logout" });
+        }
+        res.clearCookie('connect.sid');
+        res.status(200).json({ message: "Logout realizado com sucesso" });
+      });
     });
   });
 
   app.get("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
-      res.redirect("/");
+      req.session.destroy((err) => {
+        if (err) console.error('Session destroy error:', err);
+        res.clearCookie('connect.sid');
+        res.redirect("/");
+      });
     });
   });
 
