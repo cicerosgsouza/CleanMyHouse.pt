@@ -73,12 +73,12 @@ export default function AdminDashboard() {
     select: (data: any) => data?.value || '',
   });
 
-  // Sincronizar o estado local com o valor da configuração quando carregado
+  // Sincronizar o estado local com o valor da configuração apenas no carregamento inicial
   useEffect(() => {
-    if (emailSetting && !reportEmail) {
+    if (emailSetting && reportEmail === "") {
       setReportEmail(emailSetting);
     }
-  }, [emailSetting, reportEmail]);
+  }, [emailSetting]);
 
   const { data: users } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
