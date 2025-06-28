@@ -33,7 +33,9 @@ class EmailService {
       }
 
       this.transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
         auth: {
           user: emailUser,
           pass: emailPass,
@@ -72,6 +74,15 @@ class EmailService {
       return true;
     } catch (error) {
       console.error('Failed to send email:', error);
+      const errorObj = error as Error;
+      if (errorObj.message?.includes('Invalid login') || errorObj.message?.includes('BadCredentials')) {
+        console.error('❌ ERRO DE AUTENTICAÇÃO GMAIL:');
+        console.error('📧 Para usar o Gmail, você precisa de uma "Senha de App":');
+        console.error('1. Acesse https://myaccount.google.com/security');
+        console.error('2. Ative a verificação em 2 etapas');
+        console.error('3. Vá em "Senhas de app" e gere uma nova senha');
+        console.error('4. Use essa senha de 16 dígitos no lugar da senha normal');
+      }
       return false;
     }
   }
